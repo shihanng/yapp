@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"github","Source":"git::https://github.com/shihanng/tf-github-repo.git?ref=v0.1.0","Dir":".terraform/modules/github"}]}
