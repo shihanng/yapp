@@ -18,3 +18,7 @@ repos:
     hooks:
       - id: terraform_tflint
       - id: terraform_fmt
+  - repo: https://github.com/instrumentl/pre-commit-just
+    rev: "main"
+    hooks:
+      - id: format-justfile
