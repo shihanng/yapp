@@ -22,7 +22,7 @@ impl State {
         for (tab_id, tab_info) in self.tab_infos.iter().enumerate() {
             if let Some(pane_infos) = pane_infos.get(&tab_id) {
                 pane_infos.iter().for_each(|pane_info| {
-                    if !pane_info.is_suppressed && pane_info.is_selectable {
+                    if !pane_info.is_plugin && !pane_info.is_suppressed && pane_info.is_selectable {
                         panes.push(Pane {
                             tab_name: tab_info.name.clone(),
                             pane_title: pane_info.title.clone(),
@@ -152,6 +152,14 @@ mod tests {
                         title: String::from("Pane 4 (suppressed)"),
                         is_selectable: true,
                         is_suppressed: true,
+                        ..Default::default()
+                    },
+                    // Hidden because is a plugin
+                    PaneInfo {
+                        id: 4,
+                        title: String::from("Pane 4 (suppressed)"),
+                        is_selectable: true,
+                        is_plugin: true,
                         ..Default::default()
                     },
                 ],
