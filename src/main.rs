@@ -52,14 +52,14 @@ impl State {
     }
 
     fn select_downward(&mut self) {
-        if self.selected + 1 < self.panes.len() {
-            self.selected += 1;
+        if !self.panes.is_empty() {
+            self.selected = (self.selected + 1) % self.panes.len();
         }
     }
 
     fn select_upward(&mut self) {
-        if self.selected > 0 {
-            self.selected -= 1;
+        if !self.panes.is_empty() {
+            self.selected = (self.selected + self.panes.len() - 1) % self.panes.len();
         }
     }
 }
@@ -279,7 +279,7 @@ mod tests {
 
         state.select_downward();
         state.select_downward();
-        assert_eq!(state.selected, 1);
+        assert_eq!(state.selected, 0);
     }
 
     #[test]
@@ -292,6 +292,6 @@ mod tests {
 
         state.select_upward();
         state.select_upward();
-        assert_eq!(state.selected, 0);
+        assert_eq!(state.selected, 1);
     }
 }
