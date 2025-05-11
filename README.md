@@ -1,20 +1,43 @@
 # YAPP
 
-## About
+Yet Another (Zellij) Panes Picker
 
-This is an example [Zellij][zellij] plugin in Rust.
-It can be used as a template to start developing your own plugins.
+## Installation
 
-More about Zellij plugins: [Zellij Documentation][docs]
+You have to build this plugin before proceeding with the setup.
 
-[zellij]: https://github.com/zellij-org/zellij
-[docs]: https://zellij.dev/documentation/plugins.html
+```shell
+git clone https://github.com/shihanng/yapp.git
+cd yapp
+cargo build --release
+```
+
+```kdl
+shared_except "locked" {
+    bind "Alt y" {
+        LaunchOrFocusPlugin "file:/<PATH_TO>/yapp.wasm" {
+            floating true; move_to_focused_tab true;
+        }
+    }
+}
+```
+
+## Usage
+
+**Alt Y** to open plugin pane and list all panes.
+
+### In the plugin pane
+
+- **Up/Down** to move the selection in the list of panes.
+- **Enter** to navigate to the selected pane.
+- **Esc** to close the plugin without navigating to a pane.
 
 ## Development
 
-_Note_: you will need to have `wasm32-wasi` added to rust
-as a target to build the plugin.
-This can be done with `rustup target add wasm32-wasi`.
+### Pre-commit and Testing
+
+- Install pre-commit hooks with `pre-commit install`.
+- Run tests with `just test`.
 
 ### With the Provided Layout
 
