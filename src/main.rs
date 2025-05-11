@@ -102,6 +102,9 @@ impl ZellijPlugin for State {
                     focus_pane_with_id(PaneId::Terminal(self.selected as u32), true);
                     hide_self();
                 }
+                BareKey::Esc if key.has_no_modifiers() => {
+                    close_self();
+                }
                 _ => {}
             },
             _ => {}
