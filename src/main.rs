@@ -3,9 +3,9 @@ use zellij_tile::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
-#[derive(Default)]
 struct Pane {
     tab_name: String,
+    pane_id: PaneId,
     pane_title: String,
 }
 
@@ -26,6 +26,7 @@ impl State {
                     if !pane_info.is_plugin && !pane_info.is_suppressed && pane_info.is_selectable {
                         panes.push(Pane {
                             tab_name: tab_info.name.clone(),
+                            pane_id: PaneId::Terminal(pane_info.id),
                             pane_title: pane_info.title.clone(),
                         });
                     }
@@ -99,7 +100,7 @@ impl ZellijPlugin for State {
                 BareKey::Down if key.has_no_modifiers() => self.select_downward(),
                 BareKey::Up if key.has_no_modifiers() => self.select_upward(),
                 BareKey::Enter if key.has_no_modifiers() => {
-                    focus_pane_with_id(PaneId::Terminal(self.selected as u32), true);
+                    focus_pane_with_id(self.panes[self.selected].pane_id, true);
                     hide_self();
                 }
                 BareKey::Esc if key.has_no_modifiers() => {
@@ -239,10 +240,12 @@ mod tests {
         vec![
             Pane {
                 pane_title: String::from("Pane 1"),
+                pane_id: PaneId::Terminal(1),
                 tab_name: String::from("Tab"),
             },
             Pane {
                 pane_title: String::from("Pane 2"),
+                pane_id: PaneId::Terminal(2),
                 tab_name: String::from("Tab"),
             },
         ]
