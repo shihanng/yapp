@@ -15,16 +15,25 @@ cargo build --release
 ```kdl
 shared_except "locked" {
     bind "Alt y" {
-        LaunchOrFocusPlugin "file:/<PATH_TO>/yapp.wasm" {
+        LaunchOrFocusPlugin "yapp" {
             floating true; move_to_focused_tab true;
         }
     }
+}
+
+load_plugins {
+    yapp
+}
+
+plugins {
+    yapp location=""file:/<PATH_TO>/yapp.wasm""
 }
 ```
 
 ## Usage
 
-**Alt Y** to open plugin pane and list all panes.
+- **Alt Y** to open plugin pane and list all panes.
+- **Ctrl O** to toggle between two panes.
 
 ### In the plugin pane
 

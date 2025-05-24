@@ -18,32 +18,72 @@ struct Pane {
 #[derive(Default)]
 struct State {
     tab_infos: Vec<TabInfo>,
+    pane_infos: HashMap<usize, Vec<PaneInfo>>,
+
     panes: Vec<Pane>,
+    current_focus: Option<PaneId>,
+    previous_focus: Option<PaneId>,
     selected: usize,
+
+    keybinds: Keybinds,
 
     plugin_id: Option<u32>,
 }
 
+const NAVIGATE_BACK: &str = "navigate_back";
+
 impl State {
-    fn save_panes(&mut self, pane_infos: HashMap<usize, Vec<PaneInfo>>) {
+    /// Compute the current state of panes that are visible on the plugin list,
+    /// currently and previously focus panes.
+    /// We have to call this method in both TabUpdate and PaneUpdate event because
+    /// the ordering of the events is unditerministic.
+    fn update_state(&mut self) {
         let mut panes: Vec<Pane> = Vec::new();
+        let mut current_focus = None;
 
         for (tab_id, tab_info) in self.tab_infos.iter().enumerate() {
-            if let Some(pane_infos) = pane_infos.get(&tab_id) {
+            if let Some(pane_infos) = self.pane_infos.get(&tab_id) {
                 pane_infos.iter().for_each(|pane_info| {
                     if pane_info.is_plugin && Some(pane_info.id) == self.plugin_id {
                         return;
                     }
 
-                    if !pane_info.is_suppressed && pane_info.is_selectable {
-                        panes.push(Pane {
-                            tab_name: tab_info.name.clone(),
-                            pane_id: PaneId::Terminal(pane_info.id),
-                            pane_title: pane_info.title.clone(),
-                        });
+                    if pane_info.is_suppressed || !pane_info.is_selectable {
+                        return;
+                    }
+
+                    let pane_id = if pane_info.is_plugin {
+                        PaneId::Plugin(pane_info.id)
+                    } else {
+                        PaneId::Terminal(pane_info.id)
+                    };
+
+                    panes.push(Pane {
+                        tab_name: tab_info.name.clone(),
+                        pane_id,
+                        pane_title: pane_info.title.clone(),
+                    });
+
+                    if pane_info.is_focused && tab_info.active && !pane_info.is_plugin {
+                        current_focus = Some(pane_id)
                     }
                 });
             }
+        }
+
+        if current_focus.is_some() && current_focus != self.current_focus {
+            if panes.iter().any(|p| self.current_focus == Some(p.pane_id)) {
+                // If the previous current_focus still exists, use that as the
+                // next previous_focus.
+                self.previous_focus = self.current_focus;
+            } else if panes.iter().any(|p| self.previous_focus == Some(p.pane_id)) {
+                // Not replacing the old previous_focus because the old
+                // current_focus was not found in the current panes (could be already deleted)
+                // and the old previous_focus still exists.
+            } else {
+                self.previous_focus = None;
+            }
+            self.current_focus = current_focus;
         }
 
         self.panes = panes;
@@ -87,21 +127,37 @@ register_plugin!(State);
 impl ZellijPlugin for State {
     fn load(&mut self, _configuration: BTreeMap<String, String>) {
         self.plugin_id = Some(get_plugin_ids().plugin_id);
+
         request_permission(&[
             PermissionType::ChangeApplicationState,
             PermissionType::ReadApplicationState,
+            PermissionType::Reconfigure,
         ]);
 
-        subscribe(&[EventType::Key, EventType::PaneUpdate, EventType::TabUpdate]);
+        subscribe(&[
+            EventType::ModeUpdate,
+            EventType::Key,
+            EventType::PaneUpdate,
+            EventType::TabUpdate,
+        ]);
     }
 
     fn update(&mut self, event: Event) -> bool {
         match event {
+            Event::ModeUpdate(mode_info) => {
+                if let Some(base_mode) = mode_info.base_mode {
+                    if let Some(plugin_id) = self.plugin_id {
+                        self.keybinds.bind(base_mode, plugin_id);
+                    }
+                }
+            }
             Event::TabUpdate(tab_infos) => {
                 self.tab_infos = tab_infos;
+                self.update_state();
             }
             Event::PaneUpdate(PaneManifest { panes }) => {
-                self.save_panes(panes);
+                self.pane_infos = panes;
+                self.update_state();
             }
             Event::Key(key) => match key.bare_key {
                 BareKey::Down if key.has_no_modifiers() => self.select_downward(),
@@ -111,7 +167,7 @@ impl ZellijPlugin for State {
                     hide_self();
                 }
                 BareKey::Esc if key.has_no_modifiers() => {
-                    close_self();
+                    hide_self();
                 }
                 _ => {}
             },
@@ -120,22 +176,72 @@ impl ZellijPlugin for State {
         true
     }
 
-    fn pipe(&mut self, _pipe_message: PipeMessage) -> bool {
-        // react to data piped to this plugin from the CLI, a keybinding or another plugin
-        // read more about pipes: https://zellij.dev/documentation/plugin-pipes
-        // return true if this plugin's `render` function should be called for the plugin to render
-        // itself
-        false
+    fn pipe(&mut self, pipe_message: PipeMessage) -> bool {
+        if pipe_message.source == PipeSource::Keybind
+            && pipe_message.is_private
+            && pipe_message.name == NAVIGATE_BACK
+        {
+            if let Some(id) = self.previous_focus {
+                focus_pane_with_id(id, true);
+            }
+        }
+        true
     }
+
     fn render(&mut self, _rows: usize, _cols: usize) {
         let nested_list = self.panes_as_nested_list();
         print_nested_list(nested_list);
     }
 }
 
+struct Keybinds {
+    bound_key: bool,
+    navigate_back: KeyWithModifier,
+}
+
+impl Default for Keybinds {
+    fn default() -> Keybinds {
+        Keybinds {
+            bound_key: Default::default(),
+            navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
+        }
+    }
+}
+
+impl Keybinds {
+    pub fn bind(&mut self, base_mode: InputMode, plugin_id: u32) {
+        if !self.bound_key {
+            bind_key(base_mode, plugin_id, &self.navigate_back);
+            self.bound_key = true;
+        }
+    }
+}
+
+pub fn bind_key(mode: InputMode, plugin_id: u32, short_cut: &KeyWithModifier) {
+    let new_config = format!(
+        "
+        keybinds {{
+            {:?} {{
+                bind \"{}\" {{
+                    MessagePluginId {} {{
+                        name \"{}\"
+                    }}
+                }}
+            }}
+        }}
+        ",
+        format!("{:?}", mode).to_lowercase(),
+        short_cut,
+        plugin_id,
+        NAVIGATE_BACK,
+    );
+    reconfigure(new_config, false);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
 
     #[test]
     fn panes_as_nested_list() {
@@ -150,74 +256,73 @@ mod tests {
                     ..Default::default()
                 },
             ],
+            pane_infos: HashMap::from([
+                (
+                    // This will be the last because it is the last tab.
+                    1,
+                    vec![PaneInfo {
+                        id: 55,
+                        title: String::from("Pane 55"),
+                        is_selectable: true,
+                        ..Default::default()
+                    }],
+                ),
+                (
+                    0,
+                    vec![
+                        PaneInfo {
+                            id: 1,
+                            title: String::from("Pane 1"),
+                            is_selectable: true,
+                            ..Default::default()
+                        },
+                        PaneInfo {
+                            id: 2,
+                            title: String::from("Pane 2"),
+                            is_selectable: true,
+                            ..Default::default()
+                        },
+                        // Hidden because is not selectable
+                        PaneInfo {
+                            id: 3,
+                            title: String::from("Pane 3 (not selectable)"),
+                            ..Default::default()
+                        },
+                        // Hidden because is suppressed
+                        PaneInfo {
+                            id: 4,
+                            title: String::from("Pane 4 (suppressed)"),
+                            is_selectable: true,
+                            is_suppressed: true,
+                            ..Default::default()
+                        },
+                        // Hidden because is the plugin
+                        PaneInfo {
+                            id: 4,
+                            title: String::from("Pane 4 (suppressed)"),
+                            is_selectable: true,
+                            is_plugin: true,
+                            ..Default::default()
+                        },
+                    ],
+                ),
+                (
+                    // The following tab does not exist.
+                    2,
+                    vec![PaneInfo {
+                        id: 99,
+                        title: String::from("Pane 99 on non existing tab"),
+                        is_selectable: true,
+                        ..Default::default()
+                    }],
+                ),
+            ]),
             selected: 1,
             plugin_id: Some(4),
             ..Default::default()
         };
 
-        let panes = HashMap::from([
-            (
-                // This will be the last because it is the last tab.
-                1,
-                vec![PaneInfo {
-                    id: 55,
-                    title: String::from("Pane 55"),
-                    is_selectable: true,
-                    ..Default::default()
-                }],
-            ),
-            (
-                0,
-                vec![
-                    PaneInfo {
-                        id: 1,
-                        title: String::from("Pane 1"),
-                        is_selectable: true,
-                        ..Default::default()
-                    },
-                    PaneInfo {
-                        id: 2,
-                        title: String::from("Pane 2"),
-                        is_selectable: true,
-                        ..Default::default()
-                    },
-                    // Hidden because is not selectable
-                    PaneInfo {
-                        id: 3,
-                        title: String::from("Pane 3 (not selectable)"),
-                        ..Default::default()
-                    },
-                    // Hidden because is suppressed
-                    PaneInfo {
-                        id: 4,
-                        title: String::from("Pane 4 (suppressed)"),
-                        is_selectable: true,
-                        is_suppressed: true,
-                        ..Default::default()
-                    },
-                    // Hidden because is the plugin
-                    PaneInfo {
-                        id: 4,
-                        title: String::from("Pane 4 (suppressed)"),
-                        is_selectable: true,
-                        is_plugin: true,
-                        ..Default::default()
-                    },
-                ],
-            ),
-            (
-                // The following tab does not exist.
-                2,
-                vec![PaneInfo {
-                    id: 99,
-                    title: String::from("Pane 99 on non existing tab"),
-                    is_selectable: true,
-                    ..Default::default()
-                }],
-            ),
-        ]);
-
-        state.save_panes(panes);
+        state.update_state();
 
         let items = state.panes_as_nested_list();
 
@@ -307,5 +412,111 @@ mod tests {
         state.select_upward();
         state.select_upward();
         assert_eq!(state.selected, 1);
+    }
+
+    #[fixture]
+    fn tab(#[default("Tab")] name: &str) -> TabInfo {
+        TabInfo {
+            name: String::from(name),
+            ..Default::default()
+        }
+    }
+
+    #[fixture]
+    fn active_tab(#[default("Tab")] name: &str) -> TabInfo {
+        TabInfo {
+            name: String::from(name),
+            active: true,
+            ..Default::default()
+        }
+    }
+
+    #[fixture]
+    fn pane(#[default(0)] id: u32) -> PaneInfo {
+        PaneInfo {
+            id,
+            is_selectable: true,
+            ..Default::default()
+        }
+    }
+
+    #[fixture]
+    fn focus_pane(#[default(0)] id: u32) -> PaneInfo {
+        PaneInfo {
+            id,
+            is_focused: true,
+            is_selectable: true,
+            ..Default::default()
+        }
+    }
+
+    #[fixture]
+    fn focus_plugin_pane(#[default(0)] id: u32) -> PaneInfo {
+        PaneInfo {
+            id,
+            is_focused: true,
+            is_selectable: true,
+            is_plugin: true,
+            ..Default::default()
+        }
+    }
+
+    #[fixture]
+    fn current_focus() -> PaneId {
+        PaneId::Terminal(10)
+    }
+
+    #[fixture]
+    fn previous_focus() -> PaneId {
+        PaneId::Terminal(11)
+    }
+
+    #[rstest]
+    #[case::no_panes_in_tab(vec![ active_tab("Tab") ], HashMap::from([(1, vec![focus_pane(1)])]))]
+    #[case::no_tabs(vec![], HashMap::from([(1, vec![focus_pane(1)])]))]
+    #[case::focus_pane_is_plugin(vec![ active_tab("Tab") ], HashMap::from([(0, vec![focus_plugin_pane(1)])]))]
+    #[case::focus_pane_is_current(vec![ active_tab("Tab") ], HashMap::from([(0, vec![focus_pane(10)])]))]
+    fn no_changes_in_focus(
+        #[case] tab_infos: Vec<TabInfo>,
+        #[case] pane_infos: HashMap<usize, Vec<PaneInfo>>,
+        current_focus: PaneId,
+        previous_focus: PaneId,
+    ) {
+        let mut state = State {
+            tab_infos,
+            pane_infos,
+            current_focus: Some(current_focus),
+            previous_focus: Some(previous_focus),
+            ..Default::default()
+        };
+
+        state.update_state();
+
+        assert_eq!(state.current_focus, Some(current_focus));
+        assert_eq!(state.previous_focus, Some(previous_focus));
+    }
+
+    #[rstest]
+    #[case::current_focus_exists(vec![ active_tab("Tab") ], HashMap::from([(0, vec![focus_pane(1), pane(10)])]), PaneId::Terminal(1), Some(PaneId::Terminal(10)))]
+    #[case::current_focus_not_exists_previous_exists(vec![ active_tab("Tab") ], HashMap::from([(0, vec![focus_pane(1), pane(11)])]), PaneId::Terminal(1), Some(PaneId::Terminal(11)))]
+    #[case::current_and_previous_focus_not_exists(vec![ active_tab("Tab") ], HashMap::from([(0, vec![focus_pane(1)])]), PaneId::Terminal(1), None)]
+    fn change_in_focus(
+        #[case] tab_infos: Vec<TabInfo>,
+        #[case] pane_infos: HashMap<usize, Vec<PaneInfo>>,
+        #[case] new_current_focus: PaneId,
+        #[case] new_previous_focus: Option<PaneId>,
+    ) {
+        let mut state = State {
+            tab_infos,
+            pane_infos,
+            current_focus: Some(PaneId::Terminal(10)),
+            previous_focus: Some(PaneId::Terminal(11)),
+            ..Default::default()
+        };
+
+        state.update_state();
+
+        assert_eq!(state.current_focus, Some(new_current_focus));
+        assert_eq!(state.previous_focus, new_previous_focus);
     }
 }
