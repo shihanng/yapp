@@ -1,3 +1,9 @@
+#[cfg(not(target_arch = "wasm32"))]
+mod shim_native;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use shim_native::*;
+
 use zellij_tile::prelude::*;
 
 use std::collections::BTreeMap;
