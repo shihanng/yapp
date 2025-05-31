@@ -1,10 +1,10 @@
 repos:
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.17.2
+    rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
   - repo: https://github.com/google/yamlfmt
-    rev: v0.14.0
+    rev: v0.17.0
     hooks:
       - id: yamlfmt
   - repo: https://github.com/doublify/pre-commit-rust
@@ -14,11 +14,11 @@ repos:
       - id: cargo-check
       - id: clippy
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.99.0
+    rev: v1.99.1
     hooks:
       - id: terraform_tflint
       - id: terraform_fmt
   - repo: https://github.com/instrumentl/pre-commit-just
-    rev: "main"
+    rev: "v0.1"
     hooks:
       - id: format-justfile
