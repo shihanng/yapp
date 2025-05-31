@@ -5,3 +5,6 @@ tf +ARGS:
 
 test target="aarch64-apple-darwin":
     cargo test --target {{ target }}
+
+cover target="aarch64-apple-darwin":
+    cargo tarpaulin --target {{ target }}
