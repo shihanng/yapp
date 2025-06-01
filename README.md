@@ -28,7 +28,7 @@ plugins {
 ## Usage
 
 - **Alt Y** to open plugin pane and list all panes.
-- **Ctrl O** to toggle between two panes.
+- **Alt O** to toggle between two panes.
 
 ### In the plugin pane
 
