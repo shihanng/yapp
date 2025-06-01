@@ -13,3 +13,8 @@ cover:
 
 lint:
     pre-commit run --show-diff-on-failure --color=always --all-files
+
+github_token := env('GITHUB_TOKEN', "")
+
+run-ci-local:
+    act push {{ if github_token != "" { "-s GITHUB_TOKEN=$GITHUB_TOKEN" } else { "" } }} -j Linters
