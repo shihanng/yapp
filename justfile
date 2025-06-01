@@ -3,8 +3,10 @@ tf +ARGS:
     set -euo pipefail
     terraform -chdir=tf {{ ARGS }}
 
-test target="aarch64-apple-darwin":
+target := `rustc -Vv | awk '/^host:/ { print $2 }'`
+
+test:
     cargo test --target {{ target }}
 
-cover target="aarch64-apple-darwin":
+cover:
     cargo tarpaulin --target {{ target }}
