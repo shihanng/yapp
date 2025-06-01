@@ -4,13 +4,8 @@ Yet Another (Zellij) Panes Picker
 
 ## Installation
 
-You have to build this plugin before proceeding with the setup.
-
-```shell
-git clone https://github.com/shihanng/yapp.git
-cd yapp
-cargo build --release
-```
+Put the following in your Zellij's configuration.
+Replace `<VERSION>` with the appropriate version from the release page, e.g., `v0.1.0`.
 
 ```kdl
 shared_except "locked" {
@@ -26,7 +21,7 @@ load_plugins {
 }
 
 plugins {
-    yapp location=""file:/<PATH_TO>/yapp.wasm""
+    yapp location="https://github.com/shihanng/yapp/releases/download/<VERSION>/yapp.wasm"
 }
 ```
 
