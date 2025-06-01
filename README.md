@@ -46,7 +46,20 @@ plugins {
 ### Pre-commit and Testing
 
 - Install pre-commit hooks with `pre-commit install`.
+- Run linters with `just lint`.
 - Run tests with `just test`.
+
+### Run GitHub Actions locally
+
+Use [`act`](https://github.com/nektos/act) to run GitHub Actions locally.
+
+We use GitHub token in order to avoid hitting the rate limit
+when installing the toolings.
+
+```shell
+export GITHUB_TOKEN=$(gh auth token)
+just run-ci-local
+```
 
 ### With the Provided Layout
 
