@@ -46,6 +46,7 @@ plugins {
 ### Pre-commit and Testing
 
 - Install pre-commit hooks with `pre-commit install`.
+- Run linters with `just lint`.
 - Run tests with `just test`.
 
 ### With the Provided Layout
