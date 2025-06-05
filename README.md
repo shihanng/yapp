@@ -29,12 +29,14 @@ plugins {
 
 - **Alt Y** to open plugin pane and list all panes.
 - **Alt O** to toggle between two panes.
+- **Alt l** to toggle star/unstar the focused pane.
 
 ### In the plugin pane
 
 - **Up/Down** to move the selection in the list of panes.
 - **Enter** to navigate to the selected pane.
 - **Esc** to close the plugin without navigating to a pane.
+- **Space** to toggle star/unstar the selected pane.
 
 ## Development
 
