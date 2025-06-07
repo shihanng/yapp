@@ -1,20 +1,21 @@
+use indexmap::IndexSet;
 use std::collections::HashSet;
 use zellij_tile::prelude::PaneId;
 
 /// A collection of pane IDs that are starred.
 #[derive(Default)]
 pub struct Star {
-    pane_ids: Vec<PaneId>,
+    pane_ids: IndexSet<PaneId>,
 }
 
 impl Star {
     /// Star a pane by adding PaneId into pane_ids.
-    pub fn add(&mut self, pane_id: PaneId) {
-        self.pane_ids.push(pane_id);
+    fn add(&mut self, pane_id: PaneId) {
+        self.pane_ids.insert(pane_id);
     }
 
     /// Unstar a pane by removing PaneId from pane_ids.
-    pub fn remove(&mut self, pane_id: &PaneId) {
+    fn remove(&mut self, pane_id: &PaneId) {
         self.pane_ids.retain(|id| id != pane_id);
     }
 
@@ -26,6 +27,16 @@ impl Star {
     /// Check if Star has pane_id.
     pub fn has(&self, pane_id: &PaneId) -> bool {
         self.pane_ids.contains(pane_id)
+    }
+
+    /// Add pane_id if it is not yet added
+    /// and remove if it is already in the list.
+    pub fn toggle(&mut self, pane_id: PaneId) {
+        if self.pane_ids.contains(&pane_id) {
+            self.remove(&pane_id);
+        } else {
+            self.add(pane_id);
+        }
     }
 }
 
@@ -51,26 +62,30 @@ mod tests {
         star.add(PaneId::Terminal(2));
         star.add(PaneId::Terminal(10));
         star.add(PaneId::Terminal(3));
+        star.add(PaneId::Terminal(2)); // Adding same pane_id again should not have any effect.
+        star.toggle(PaneId::Terminal(4));
+        star.toggle(PaneId::Terminal(4));
 
         assert_eq!(
             star.pane_ids,
-            vec![
+            IndexSet::from([
                 PaneId::Terminal(2),
                 PaneId::Terminal(10),
                 PaneId::Terminal(3)
-            ]
+            ])
         );
 
         star.remove(&PaneId::Terminal(2));
+        star.remove(&PaneId::Terminal(2)); // Removing the same pane_id again should not have any effect.
 
         assert_eq!(
             star.pane_ids,
-            vec![PaneId::Terminal(10), PaneId::Terminal(3)]
+            IndexSet::from([PaneId::Terminal(10), PaneId::Terminal(3)])
         );
 
         star.sync(&pane_ids);
 
-        assert_eq!(star.pane_ids, vec![PaneId::Terminal(3)]);
+        assert_eq!(star.pane_ids, IndexSet::from([PaneId::Terminal(3)]));
 
         assert!(star.has(&PaneId::Terminal(3)));
         assert!(!star.has(&PaneId::Terminal(2)));

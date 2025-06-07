@@ -198,11 +198,7 @@ impl ZellijPlugin for State {
                 }
                 BareKey::Char(' ') if key.has_no_modifiers() => {
                     let selected_pane_id = self.panes[self.selected].pane_id;
-                    if self.stars.has(&selected_pane_id) {
-                        self.stars.remove(&selected_pane_id);
-                    } else {
-                        self.stars.add(selected_pane_id);
-                    }
+                    self.stars.toggle(selected_pane_id);
                 }
                 _ => {}
             },
@@ -219,11 +215,7 @@ impl ZellijPlugin for State {
                 }
             } else if pipe_message.name == TOGGLE_STAR {
                 if let Some(pane_id) = self.current_focus {
-                    if self.stars.has(&pane_id) {
-                        self.stars.remove(&pane_id);
-                    } else {
-                        self.stars.add(pane_id);
-                    }
+                    self.stars.toggle(pane_id);
                 }
             }
             return true;
