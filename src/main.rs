@@ -1,8 +1,11 @@
 #[cfg(not(target_arch = "wasm32"))]
 mod shim_native;
+mod star;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use shim_native::*;
+
+use std::collections::HashSet;
 
 use zellij_tile::prelude::*;
 
@@ -25,12 +28,15 @@ struct State {
     previous_focus: Option<PaneId>,
     selected: usize,
 
+    stars: star::Star,
+
     keybinds: Keybinds,
 
     plugin_id: Option<u32>,
 }
 
 const NAVIGATE_BACK: &str = "navigate_back";
+const TOGGLE_STAR: &str = "toggle_star";
 
 impl State {
     /// Compute the current state of panes that are visible on the plugin list,
@@ -71,12 +77,23 @@ impl State {
             }
         }
 
+        // Convert panes to hashset of paneid
+        let pane_ids: HashSet<PaneId> = panes.iter().map(|p| p.pane_id).collect();
+
         if current_focus.is_some() && current_focus != self.current_focus {
-            if panes.iter().any(|p| self.current_focus == Some(p.pane_id)) {
+            if self
+                .current_focus
+                .as_ref()
+                .is_some_and(|c| pane_ids.contains(c))
+            {
                 // If the previous current_focus still exists, use that as the
                 // next previous_focus.
                 self.previous_focus = self.current_focus;
-            } else if panes.iter().any(|p| self.previous_focus == Some(p.pane_id)) {
+            } else if self
+                .previous_focus
+                .as_ref()
+                .is_some_and(|c| pane_ids.contains(c))
+            {
                 // Not replacing the old previous_focus because the old
                 // current_focus was not found in the current panes (could be already deleted)
                 // and the old previous_focus still exists.
@@ -86,6 +103,7 @@ impl State {
             self.current_focus = current_focus;
         }
 
+        self.stars.sync(&pane_ids);
         self.panes = panes;
     }
 
@@ -93,7 +111,16 @@ impl State {
         let mut items = Vec::new();
 
         for (i, pane) in self.panes.iter().enumerate() {
-            let mut item = NestedListItem::new(format!("{} {}", pane.tab_name, pane.pane_title));
+            let mut item = NestedListItem::new(format!(
+                "{} {}{}",
+                pane.tab_name,
+                pane.pane_title,
+                if self.stars.has(&pane.pane_id) {
+                    " *"
+                } else {
+                    ""
+                }
+            ));
 
             if i == self.selected {
                 item = item.selected();
@@ -169,6 +196,10 @@ impl ZellijPlugin for State {
                 BareKey::Esc if key.has_no_modifiers() => {
                     hide_self();
                 }
+                BareKey::Char(' ') if key.has_no_modifiers() => {
+                    let selected_pane_id = self.panes[self.selected].pane_id;
+                    self.stars.toggle(selected_pane_id);
+                }
                 _ => {}
             },
             _ => {}
@@ -177,15 +208,19 @@ impl ZellijPlugin for State {
     }
 
     fn pipe(&mut self, pipe_message: PipeMessage) -> bool {
-        if pipe_message.source == PipeSource::Keybind
-            && pipe_message.is_private
-            && pipe_message.name == NAVIGATE_BACK
-        {
-            if let Some(id) = self.previous_focus {
-                focus_pane_with_id(id, true);
+        if pipe_message.source == PipeSource::Keybind && pipe_message.is_private {
+            if pipe_message.name == NAVIGATE_BACK {
+                if let Some(id) = self.previous_focus {
+                    focus_pane_with_id(id, true);
+                }
+            } else if pipe_message.name == TOGGLE_STAR {
+                if let Some(pane_id) = self.current_focus {
+                    self.stars.toggle(pane_id);
+                }
             }
+            return true;
         }
-        true
+        false
     }
 
     fn render(&mut self, _rows: usize, _cols: usize) {
@@ -197,6 +232,7 @@ impl ZellijPlugin for State {
 struct Keybinds {
     bound_key: bool,
     navigate_back: KeyWithModifier,
+    toggle_star: KeyWithModifier,
 }
 
 impl Default for Keybinds {
@@ -204,6 +240,7 @@ impl Default for Keybinds {
         Keybinds {
             bound_key: Default::default(),
             navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
+            toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
         }
     }
 }
@@ -211,13 +248,18 @@ impl Default for Keybinds {
 impl Keybinds {
     pub fn bind(&mut self, base_mode: InputMode, plugin_id: u32) {
         if !self.bound_key {
-            bind_key(base_mode, plugin_id, &self.navigate_back);
+            bind_key(base_mode, plugin_id, &self.navigate_back, &self.toggle_star);
             self.bound_key = true;
         }
     }
 }
 
-pub fn bind_key(mode: InputMode, plugin_id: u32, short_cut: &KeyWithModifier) {
+pub fn bind_key(
+    mode: InputMode,
+    plugin_id: u32,
+    navigate_back: &KeyWithModifier,
+    toggle_star: &KeyWithModifier,
+) {
     let new_config = format!(
         "
         keybinds {{
@@ -227,13 +269,21 @@ pub fn bind_key(mode: InputMode, plugin_id: u32, short_cut: &KeyWithModifier) {
                         name \"{}\"
                     }}
                 }}
+                bind \"{}\" {{
+                    MessagePluginId {} {{
+                        name \"{}\"
+                    }}
+                }}
             }}
         }}
         ",
         format!("{:?}", mode).to_lowercase(),
-        short_cut,
+        navigate_back,
         plugin_id,
         NAVIGATE_BACK,
+        toggle_star,
+        plugin_id,
+        TOGGLE_STAR,
     );
     reconfigure(new_config, false);
 }
