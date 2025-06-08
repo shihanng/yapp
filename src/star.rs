@@ -16,7 +16,7 @@ impl Star {
 
     /// Unstar a pane by removing PaneId from pane_ids.
     fn remove(&mut self, pane_id: &PaneId) {
-        self.pane_ids.retain(|id| id != pane_id);
+        self.pane_ids.shift_remove(pane_id);
     }
 
     /// Remove any pane_id that is not in pane_ids.
