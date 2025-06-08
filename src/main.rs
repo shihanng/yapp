@@ -37,6 +37,8 @@ struct State {
 
 const NAVIGATE_BACK: &str = "navigate_back";
 const TOGGLE_STAR: &str = "toggle_star";
+const PREV_STAR: &str = "previous_star";
+const NEXT_STAR: &str = "next_star";
 
 impl State {
     /// Compute the current state of panes that are visible on the plugin list,
@@ -217,6 +219,18 @@ impl ZellijPlugin for State {
                 if let Some(pane_id) = self.current_focus {
                     self.stars.toggle(pane_id);
                 }
+            } else if pipe_message.name == NEXT_STAR {
+                if let Some(pane_id) = self.current_focus {
+                    if let Some(id) = self.stars.next(&pane_id) {
+                        focus_pane_with_id(*id, true);
+                    }
+                }
+            } else if pipe_message.name == PREV_STAR {
+                if let Some(pane_id) = self.current_focus {
+                    if let Some(id) = self.stars.previous(&pane_id) {
+                        focus_pane_with_id(*id, true);
+                    }
+                }
             }
             return true;
         }
@@ -233,6 +247,8 @@ struct Keybinds {
     bound_key: bool,
     navigate_back: KeyWithModifier,
     toggle_star: KeyWithModifier,
+    next_star: KeyWithModifier,
+    previous_star: KeyWithModifier,
 }
 
 impl Default for Keybinds {
@@ -241,6 +257,8 @@ impl Default for Keybinds {
             bound_key: Default::default(),
             navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
             toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
+            next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
+            previous_star: KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier(),
         }
     }
 }
@@ -248,7 +266,14 @@ impl Default for Keybinds {
 impl Keybinds {
     pub fn bind(&mut self, base_mode: InputMode, plugin_id: u32) {
         if !self.bound_key {
-            bind_key(base_mode, plugin_id, &self.navigate_back, &self.toggle_star);
+            bind_key(
+                base_mode,
+                plugin_id,
+                &self.navigate_back,
+                &self.toggle_star,
+                &self.next_star,
+                &self.previous_star,
+            );
             self.bound_key = true;
         }
     }
@@ -259,11 +284,23 @@ pub fn bind_key(
     plugin_id: u32,
     navigate_back: &KeyWithModifier,
     toggle_star: &KeyWithModifier,
+    next_star: &KeyWithModifier,
+    previous_star: &KeyWithModifier,
 ) {
     let new_config = format!(
         "
         keybinds {{
             {:?} {{
+                bind \"{}\" {{
+                    MessagePluginId {} {{
+                        name \"{}\"
+                    }}
+                }}
+                bind \"{}\" {{
+                    MessagePluginId {} {{
+                        name \"{}\"
+                    }}
+                }}
                 bind \"{}\" {{
                     MessagePluginId {} {{
                         name \"{}\"
@@ -284,6 +321,12 @@ pub fn bind_key(
         toggle_star,
         plugin_id,
         TOGGLE_STAR,
+        next_star,
+        plugin_id,
+        NEXT_STAR,
+        previous_star,
+        plugin_id,
+        PREV_STAR,
     );
     reconfigure(new_config, false);
 }

@@ -16,7 +16,7 @@ impl Star {
 
     /// Unstar a pane by removing PaneId from pane_ids.
     fn remove(&mut self, pane_id: &PaneId) {
-        self.pane_ids.retain(|id| id != pane_id);
+        self.pane_ids.shift_remove(pane_id);
     }
 
     /// Remove any pane_id that is not in pane_ids.
@@ -38,12 +38,55 @@ impl Star {
             self.add(pane_id);
         }
     }
+
+    /// Return the next pane_id after the input.
+    /// If the input does not exist, return the first pane_id.
+    /// If the input is the last pane_id in the list, return the first pane_id.
+    pub fn next(&self, pane_id: &PaneId) -> Option<&PaneId> {
+        if self.pane_ids.is_empty() {
+            return None;
+        }
+
+        let index_of = self.pane_ids.get_index_of(pane_id);
+        match index_of {
+            Some(index) => {
+                // If the pane_id is found, return the next one, or the first if it's the last.
+                let next_index = (index + 1) % self.pane_ids.len();
+                self.pane_ids.get_index(next_index)
+            }
+            None => self.pane_ids.first(),
+        }
+    }
+
+    /// Return the previous pane_id before the input.
+    /// If the input does not exist, return the first pane_id.
+    /// If the input is the first pane_id in the list, return the last pane_id.
+    pub fn previous(&self, pane_id: &PaneId) -> Option<&PaneId> {
+        if self.pane_ids.is_empty() {
+            return None;
+        }
+
+        let index_of = self.pane_ids.get_index_of(pane_id);
+        match index_of {
+            Some(index) => {
+                // If the pane_id is found, return the previous one, or the last if it's the first.
+                let prev_index = if index == 0 {
+                    self.pane_ids.len() - 1
+                } else {
+                    index - 1
+                };
+                self.pane_ids.get_index(prev_index)
+            }
+            None => self.pane_ids.first(),
+        }
+    }
 }
 
 // write test
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
     use zellij_tile::prelude::PaneId;
 
     #[test]
@@ -89,5 +132,56 @@ mod tests {
 
         assert!(star.has(&PaneId::Terminal(3)));
         assert!(!star.has(&PaneId::Terminal(2)));
+    }
+
+    #[fixture]
+    fn empty_star() -> Star {
+        Star::default()
+    }
+
+    #[fixture]
+    fn one_star() -> Star {
+        Star {
+            pane_ids: IndexSet::from([PaneId::Terminal(1)]),
+        }
+    }
+
+    #[fixture]
+    fn many_stars() -> Star {
+        Star {
+            pane_ids: IndexSet::from([
+                PaneId::Terminal(1),
+                PaneId::Terminal(2),
+                PaneId::Terminal(3),
+            ]),
+        }
+    }
+
+    #[rstest]
+    #[case(empty_star(), PaneId::Terminal(2), None)]
+    #[case(one_star(), PaneId::Terminal(1), Some(&PaneId::Terminal(1)))]
+    #[case(one_star(), PaneId::Terminal(10), Some(&PaneId::Terminal(1)))]
+    #[case(many_stars(), PaneId::Terminal(10), Some(&PaneId::Terminal(1)))]
+    #[case(many_stars(), PaneId::Terminal(1), Some(&PaneId::Terminal(2)))]
+    #[case(many_stars(), PaneId::Terminal(3), Some(&PaneId::Terminal(1)))]
+    fn next(#[case] star: Star, #[case] current_id: PaneId, #[case] expected_id: Option<&PaneId>) {
+        let got = star.next(&current_id);
+        assert_eq!(expected_id, got);
+    }
+
+    #[rstest]
+    #[case(empty_star(), PaneId::Terminal(2), None)]
+    #[case(one_star(), PaneId::Terminal(1), Some(&PaneId::Terminal(1)))]
+    #[case(one_star(), PaneId::Terminal(10), Some(&PaneId::Terminal(1)))]
+    #[case(many_stars(), PaneId::Terminal(10), Some(&PaneId::Terminal(1)))]
+    #[case(many_stars(), PaneId::Terminal(1), Some(&PaneId::Terminal(3)))]
+    #[case(many_stars(), PaneId::Terminal(3), Some(&PaneId::Terminal(2)))]
+    fn eprevious(
+        #[case] star: Star,
+        #[case] current_id: PaneId,
+        #[case] expected_id: Option<&PaneId>,
+    ) {
+        let got = star.previous(&current_id);
+        assert_eq!(expected_id, got);
     }
 }

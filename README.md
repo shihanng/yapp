@@ -30,6 +30,8 @@ plugins {
 - **Alt Y** to open plugin pane and list all panes.
 - **Alt O** to toggle between two panes.
 - **Alt l** to toggle star/unstar the focused pane.
+- **Alt i** navigate to next starred pane.
+- **Alt u** navigate to previous starred pane.
 
 ### In the plugin pane
 
