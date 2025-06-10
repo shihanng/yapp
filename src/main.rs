@@ -188,22 +188,21 @@ impl ZellijPlugin for State {
                 self.pane_infos = panes;
                 self.update_state();
             }
-            Event::Key(key) => match key.bare_key {
-                BareKey::Down if key.has_no_modifiers() => self.select_downward(),
-                BareKey::Up if key.has_no_modifiers() => self.select_upward(),
-                BareKey::Enter if key.has_no_modifiers() => {
+            Event::Key(key) => {
+                if key == self.keybinds.plugin_select_down {
+                    self.select_downward();
+                } else if key == self.keybinds.plugin_select_up {
+                    self.select_upward()
+                } else if key == self.keybinds.plugin_navigate_to {
                     focus_pane_with_id(self.panes[self.selected].pane_id, true);
                     hide_self();
-                }
-                BareKey::Esc if key.has_no_modifiers() => {
+                } else if key == self.keybinds.plugin_hide {
                     hide_self();
-                }
-                BareKey::Char(' ') if key.has_no_modifiers() => {
+                } else if key == self.keybinds.plugin_toggle_star {
                     let selected_pane_id = self.panes[self.selected].pane_id;
                     self.stars.toggle(selected_pane_id);
                 }
-                _ => {}
-            },
+            }
             _ => {}
         }
         true
@@ -249,6 +248,12 @@ struct Keybinds {
     toggle_star: KeyWithModifier,
     next_star: KeyWithModifier,
     previous_star: KeyWithModifier,
+
+    plugin_select_down: KeyWithModifier,
+    plugin_select_up: KeyWithModifier,
+    plugin_navigate_to: KeyWithModifier,
+    plugin_hide: KeyWithModifier,
+    plugin_toggle_star: KeyWithModifier,
 }
 
 impl Default for Keybinds {
@@ -259,6 +264,12 @@ impl Default for Keybinds {
             toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
             next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
             previous_star: KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier(),
+
+            plugin_select_down: KeyWithModifier::new(BareKey::Down),
+            plugin_select_up: KeyWithModifier::new(BareKey::Up),
+            plugin_navigate_to: KeyWithModifier::new(BareKey::Enter),
+            plugin_hide: KeyWithModifier::new(BareKey::Esc),
+            plugin_toggle_star: KeyWithModifier::new(BareKey::Char(' ')),
         }
     }
 }
