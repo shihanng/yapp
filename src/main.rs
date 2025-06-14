@@ -1,3 +1,4 @@
+mod keybind;
 #[cfg(not(target_arch = "wasm32"))]
 mod shim_native;
 mod star;
@@ -6,7 +7,6 @@ mod star;
 pub use shim_native::*;
 
 use std::collections::HashSet;
-
 use zellij_tile::prelude::*;
 
 use std::collections::BTreeMap;
@@ -30,7 +30,8 @@ struct State {
 
     stars: star::Star,
 
-    keybinds: Keybinds,
+    bound_key: bool,
+    keybinds: keybind::Keybinds,
 
     plugin_id: Option<u32>,
 }
@@ -176,8 +177,11 @@ impl ZellijPlugin for State {
         match event {
             Event::ModeUpdate(mode_info) => {
                 if let Some(base_mode) = mode_info.base_mode {
-                    if let Some(plugin_id) = self.plugin_id {
-                        self.keybinds.bind(base_mode, plugin_id);
+                    if !self.bound_key {
+                        if let Some(plugin_id) = self.plugin_id {
+                            self.keybinds
+                                .bind_global_keys(base_mode, plugin_id, reconfigure);
+                        }
                     }
                 }
             }
@@ -241,106 +245,6 @@ impl ZellijPlugin for State {
         let nested_list = self.panes_as_nested_list();
         print_nested_list(nested_list);
     }
-}
-
-struct Keybinds {
-    bound_key: bool,
-    navigate_back: KeyWithModifier,
-    toggle_star: KeyWithModifier,
-    next_star: KeyWithModifier,
-    previous_star: KeyWithModifier,
-
-    plugin_select_down: KeyWithModifier,
-    plugin_select_up: KeyWithModifier,
-    plugin_navigate_to: KeyWithModifier,
-    plugin_hide: KeyWithModifier,
-    plugin_toggle_star: KeyWithModifier,
-}
-
-impl Default for Keybinds {
-    fn default() -> Keybinds {
-        Keybinds {
-            bound_key: Default::default(),
-            navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
-            toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
-            next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
-            previous_star: KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier(),
-
-            plugin_select_down: KeyWithModifier::new(BareKey::Down),
-            plugin_select_up: KeyWithModifier::new(BareKey::Up),
-            plugin_navigate_to: KeyWithModifier::new(BareKey::Enter),
-            plugin_hide: KeyWithModifier::new(BareKey::Esc),
-            plugin_toggle_star: KeyWithModifier::new(BareKey::Char(' ')),
-        }
-    }
-}
-
-impl Keybinds {
-    pub fn bind(&mut self, base_mode: InputMode, plugin_id: u32) {
-        if !self.bound_key {
-            bind_key(
-                base_mode,
-                plugin_id,
-                &self.navigate_back,
-                &self.toggle_star,
-                &self.next_star,
-                &self.previous_star,
-            );
-            self.bound_key = true;
-        }
-    }
-}
-
-pub fn bind_key(
-    mode: InputMode,
-    plugin_id: u32,
-    navigate_back: &KeyWithModifier,
-    toggle_star: &KeyWithModifier,
-    next_star: &KeyWithModifier,
-    previous_star: &KeyWithModifier,
-) {
-    let new_config = format!(
-        "
-        keybinds {{
-            {:?} {{
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-            }}
-        }}
-        ",
-        format!("{:?}", mode).to_lowercase(),
-        navigate_back,
-        plugin_id,
-        NAVIGATE_BACK,
-        toggle_star,
-        plugin_id,
-        TOGGLE_STAR,
-        next_star,
-        plugin_id,
-        NEXT_STAR,
-        previous_star,
-        plugin_id,
-        PREV_STAR,
-    );
-    reconfigure(new_config, false);
 }
 
 #[cfg(test)]
