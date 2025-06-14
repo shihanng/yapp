@@ -151,11 +151,6 @@ impl State {
 #[cfg(not(test))]
 register_plugin!(State);
 
-// NOTE: you can start a development environment inside Zellij by running `zellij -l zellij.kdl` in
-// this plugin's folder
-//
-// More info on plugins: https://zellij.dev/documentation/plugins
-
 impl ZellijPlugin for State {
     fn load(&mut self, configuration: BTreeMap<String, String>) {
         self.keybinds = keybind::Keybinds::try_from(configuration).unwrap();
