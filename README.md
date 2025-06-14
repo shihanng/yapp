@@ -1,11 +1,14 @@
 # YAPP
 
-Yet Another (Zellij) Panes Picker
+Yet Another (Zellij) Panes Picker.
+With YAPP, you can quickly switch, star, and jump to panes
+using customizable keyboard shortcuts.
 
 ## Installation
 
-Put the following in your Zellij's configuration.
-Replace `<VERSION>` with the appropriate version from the release page, e.g., `v0.1.0`.
+Put the following in your
+[Zellij configuration](https://zellij.dev/documentation/configuration.html)
+`config.kdl`.
 
 ```kdl
 shared_except "locked" {
@@ -21,34 +24,42 @@ load_plugins {
 }
 
 plugins {
-    yapp location="https://github.com/shihanng/yapp/releases/download/<VERSION>/yapp.wasm"
+    yapp location="https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm"
 }
 ```
 
 ## Usage
 
-- **Alt y** to open plugin pane and list all panes.
-- **Alt o** to toggle between two panes (`navigate_back`).
-- **Alt l** to toggle star/unstar the focused pane (`toggle_star`).
-- **Alt i** navigate to next starred pane (`next_star`).
-- **Alt u** navigate to previous starred pane (`previous_star`).
+### Global Keybindings
 
-In the plugin pane
+| Keybinding | Description                                         |
+| ---------- | --------------------------------------------------- |
+| Alt y      | Open plugin pane and lists all available panes      |
+| Alt o      | Toggle between two panes (`navigate_back`)          |
+| Alt l      | Star/unstar the focused pane (`toggle_star`)        |
+| Alt i      | Navigate to next starred pane (`next_star`)         |
+| Alt u      | Navigate to previous starred pane (`previous_star`) |
 
-- **Up/Down** to move the selection in the list of panes (`plugin_select_up`/`plugin_select_down`).
-- **Enter** to navigate to the selected pane (`plugin_navigate_to`).
-- **Esc** to close the plugin without navigating to a pane (`plugin_hide`).
-- **Space** to toggle star/unstar the selected pane (`plugin_toggle_star`).
+<!-- markdownlint-disable MD013 -->
+
+### Plugin Keybindings
+
+| Keybinding | Description                                                                       |
+| ---------- | --------------------------------------------------------------------------------- |
+| Up/Down    | Move the selection in the list of panes (`plugin_select_up`/`plugin_select_down`) |
+| Enter      | Navigate to the selected pane (`plugin_navigate_to`)                              |
+| Esc        | Close the plugin without navigating to a pane (`plugin_hide`)                     |
+| Space      | Toggle star/unstar the selected pane (`plugin_toggle_star`)                       |
+
+### Customize Keybindings
 
 Use the plugin configuration to customize the keybindings, e.g.,
 the following allows us to use **Ctrl p/n** to move the selection
 in the list of panes.
 
-<!-- markdownlint-disable MD013 -->
-
 ```kdl
 plugins {
-    yapp location="https://github.com/shihanng/yapp/releases/download/<VERSION>/yapp.wasm" {
+    yapp location="https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm" {
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
     }
@@ -59,17 +70,20 @@ plugins {
 
 ## Development
 
-### Pre-commit and Testing
+### Linters and Testing
 
 - Install pre-commit hooks with `pre-commit install`.
-- Run linters with `just lint`.
-- Run tests with `just test`.
+- I use [just](https://just.systems/) (command runner) to execute linters
+  and run tests but it is optional. See [`justfile`](./justfile) for
+  what they actually do.
+  - Run linters with `just lint`.
+  - Run tests with `just test`.
 
-### Run GitHub Actions locally
+### (Optional) Run GitHub Actions locally
 
 Use [`act`](https://github.com/nektos/act) to run GitHub Actions locally.
 
-We use GitHub token in order to avoid hitting the rate limit
+GitHub token in order to avoid hitting the rate limit
 when installing the toolings.
 
 ```shell
