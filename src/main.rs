@@ -146,6 +146,7 @@ impl State {
     }
 }
 
+#[cfg(not(test))]
 register_plugin!(State);
 
 // NOTE: you can start a development environment inside Zellij by running `zellij -l zellij.kdl` in
