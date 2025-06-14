@@ -1,5 +1,9 @@
 # YAPP
 
+![GitHub branch check runs](https://img.shields.io/github/check-runs/shihanng/yapp/main)
+![GitHub Release](https://img.shields.io/github/v/release/shihanng/yapp)
+![GitHub License](https://img.shields.io/github/license/shihanng/yapp)
+
 Yet Another (Zellij) Panes Picker.
 With YAPP, you can quickly switch, star, and jump to panes
 using customizable keyboard shortcuts.
