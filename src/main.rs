@@ -7,6 +7,7 @@ mod star;
 pub use shim_native::*;
 
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use zellij_tile::prelude::*;
 
 use std::collections::BTreeMap;
@@ -156,7 +157,8 @@ register_plugin!(State);
 // More info on plugins: https://zellij.dev/documentation/plugins
 
 impl ZellijPlugin for State {
-    fn load(&mut self, _configuration: BTreeMap<String, String>) {
+    fn load(&mut self, configuration: BTreeMap<String, String>) {
+        self.keybinds = keybind::Keybinds::try_from(configuration).unwrap();
         self.plugin_id = Some(get_plugin_ids().plugin_id);
 
         request_permission(&[

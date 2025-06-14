@@ -3267,6 +3267,7 @@ dependencies = [
  "indexmap 2.9.0",
  "insta",
  "rstest",
+ "thiserror 2.0.12",
  "zellij-tile",
 ]
 

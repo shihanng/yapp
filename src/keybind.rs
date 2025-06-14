@@ -1,3 +1,7 @@
+use std::collections::BTreeMap;
+use std::convert::TryFrom;
+use std::str::FromStr;
+use thiserror::Error;
 use zellij_tile::prelude::BareKey;
 use zellij_tile::prelude::InputMode;
 use zellij_tile::prelude::KeyWithModifier;
@@ -6,6 +10,12 @@ const NAVIGATE_BACK: &str = "navigate_back";
 const TOGGLE_STAR: &str = "toggle_star";
 const PREV_STAR: &str = "previous_star";
 const NEXT_STAR: &str = "next_star";
+
+const PLUGIN_SELECT_DOWN: &str = "plugin_select_down";
+const PLUGIN_SELECT_UP: &str = "plugin_select_up";
+const PLUGIN_NAVIGATE_TO: &str = "plugin_navigate_to";
+const PLUGIN_HIDE: &str = "plugin_hide";
+const PLUGIN_TOGGLE_STAR: &str = "plugin_toggle_star";
 
 pub struct Keybinds {
     navigate_back: KeyWithModifier,
@@ -62,6 +72,49 @@ impl Keybinds {
     }
 }
 
+#[derive(Error, Debug)]
+pub enum KeybindError {
+    #[error(transparent)]
+    FromStr(#[from] Box<dyn std::error::Error>),
+}
+
+impl TryFrom<BTreeMap<String, String>> for Keybinds {
+    type Error = KeybindError;
+    fn try_from(map: BTreeMap<String, String>) -> Result<Self, Self::Error> {
+        let mut keybinds = Keybinds::default();
+
+        if let Some(key) = map.get(PLUGIN_SELECT_DOWN) {
+            keybinds.plugin_select_down = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(PLUGIN_SELECT_UP) {
+            keybinds.plugin_select_up = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(PLUGIN_NAVIGATE_TO) {
+            keybinds.plugin_navigate_to = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(PLUGIN_HIDE) {
+            keybinds.plugin_hide = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(PLUGIN_TOGGLE_STAR) {
+            keybinds.plugin_toggle_star = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(NAVIGATE_BACK) {
+            keybinds.navigate_back = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(TOGGLE_STAR) {
+            keybinds.toggle_star = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(PREV_STAR) {
+            keybinds.previous_star = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(NEXT_STAR) {
+            keybinds.next_star = KeyWithModifier::from_str(key)?
+        }
+
+        Ok(keybinds)
+    }
+}
+
 pub fn create_keybind_config(
     mode: InputMode,
     plugin_id: u32,
@@ -103,5 +156,21 @@ mod tests {
         });
 
         insta::assert_snapshot!(got_configs.join(""));
+    }
+
+    #[test]
+    fn test_try_from() {
+        let map = BTreeMap::from([
+            (PLUGIN_SELECT_DOWN.to_string(), String::from("Ctrl Down")),
+            (String::from("unknown_key"), String::from("Invalid")),
+        ]);
+
+        let keybinds = Keybinds::try_from(map).unwrap();
+
+        assert_eq!(
+            keybinds.plugin_select_down,
+            KeyWithModifier::new(BareKey::Down).with_ctrl_modifier(),
+        );
+        assert_eq!(keybinds.plugin_select_up, KeyWithModifier::new(BareKey::Up),);
     }
 }
