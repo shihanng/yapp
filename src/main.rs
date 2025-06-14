@@ -1,3 +1,4 @@
+mod keybind;
 #[cfg(not(target_arch = "wasm32"))]
 mod shim_native;
 mod star;
@@ -6,7 +7,7 @@ mod star;
 pub use shim_native::*;
 
 use std::collections::HashSet;
-
+use std::convert::TryFrom;
 use zellij_tile::prelude::*;
 
 use std::collections::BTreeMap;
@@ -30,7 +31,8 @@ struct State {
 
     stars: star::Star,
 
-    keybinds: Keybinds,
+    bound_key: bool,
+    keybinds: keybind::Keybinds,
 
     plugin_id: Option<u32>,
 }
@@ -146,6 +148,7 @@ impl State {
     }
 }
 
+#[cfg(not(test))]
 register_plugin!(State);
 
 // NOTE: you can start a development environment inside Zellij by running `zellij -l zellij.kdl` in
@@ -154,7 +157,8 @@ register_plugin!(State);
 // More info on plugins: https://zellij.dev/documentation/plugins
 
 impl ZellijPlugin for State {
-    fn load(&mut self, _configuration: BTreeMap<String, String>) {
+    fn load(&mut self, configuration: BTreeMap<String, String>) {
+        self.keybinds = keybind::Keybinds::try_from(configuration).unwrap();
         self.plugin_id = Some(get_plugin_ids().plugin_id);
 
         request_permission(&[
@@ -175,8 +179,11 @@ impl ZellijPlugin for State {
         match event {
             Event::ModeUpdate(mode_info) => {
                 if let Some(base_mode) = mode_info.base_mode {
-                    if let Some(plugin_id) = self.plugin_id {
-                        self.keybinds.bind(base_mode, plugin_id);
+                    if !self.bound_key {
+                        if let Some(plugin_id) = self.plugin_id {
+                            self.keybinds
+                                .bind_global_keys(base_mode, plugin_id, reconfigure);
+                        }
                     }
                 }
             }
@@ -188,22 +195,21 @@ impl ZellijPlugin for State {
                 self.pane_infos = panes;
                 self.update_state();
             }
-            Event::Key(key) => match key.bare_key {
-                BareKey::Down if key.has_no_modifiers() => self.select_downward(),
-                BareKey::Up if key.has_no_modifiers() => self.select_upward(),
-                BareKey::Enter if key.has_no_modifiers() => {
+            Event::Key(key) => {
+                if key == self.keybinds.plugin_select_down {
+                    self.select_downward();
+                } else if key == self.keybinds.plugin_select_up {
+                    self.select_upward()
+                } else if key == self.keybinds.plugin_navigate_to {
                     focus_pane_with_id(self.panes[self.selected].pane_id, true);
                     hide_self();
-                }
-                BareKey::Esc if key.has_no_modifiers() => {
+                } else if key == self.keybinds.plugin_hide {
                     hide_self();
-                }
-                BareKey::Char(' ') if key.has_no_modifiers() => {
+                } else if key == self.keybinds.plugin_toggle_star {
                     let selected_pane_id = self.panes[self.selected].pane_id;
                     self.stars.toggle(selected_pane_id);
                 }
-                _ => {}
-            },
+            }
             _ => {}
         }
         true
@@ -241,94 +247,6 @@ impl ZellijPlugin for State {
         let nested_list = self.panes_as_nested_list();
         print_nested_list(nested_list);
     }
-}
-
-struct Keybinds {
-    bound_key: bool,
-    navigate_back: KeyWithModifier,
-    toggle_star: KeyWithModifier,
-    next_star: KeyWithModifier,
-    previous_star: KeyWithModifier,
-}
-
-impl Default for Keybinds {
-    fn default() -> Keybinds {
-        Keybinds {
-            bound_key: Default::default(),
-            navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
-            toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
-            next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
-            previous_star: KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier(),
-        }
-    }
-}
-
-impl Keybinds {
-    pub fn bind(&mut self, base_mode: InputMode, plugin_id: u32) {
-        if !self.bound_key {
-            bind_key(
-                base_mode,
-                plugin_id,
-                &self.navigate_back,
-                &self.toggle_star,
-                &self.next_star,
-                &self.previous_star,
-            );
-            self.bound_key = true;
-        }
-    }
-}
-
-pub fn bind_key(
-    mode: InputMode,
-    plugin_id: u32,
-    navigate_back: &KeyWithModifier,
-    toggle_star: &KeyWithModifier,
-    next_star: &KeyWithModifier,
-    previous_star: &KeyWithModifier,
-) {
-    let new_config = format!(
-        "
-        keybinds {{
-            {:?} {{
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-                bind \"{}\" {{
-                    MessagePluginId {} {{
-                        name \"{}\"
-                    }}
-                }}
-            }}
-        }}
-        ",
-        format!("{:?}", mode).to_lowercase(),
-        navigate_back,
-        plugin_id,
-        NAVIGATE_BACK,
-        toggle_star,
-        plugin_id,
-        TOGGLE_STAR,
-        next_star,
-        plugin_id,
-        NEXT_STAR,
-        previous_star,
-        plugin_id,
-        PREV_STAR,
-    );
-    reconfigure(new_config, false);
 }
 
 #[cfg(test)]

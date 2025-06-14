@@ -27,18 +27,35 @@ plugins {
 
 ## Usage
 
-- **Alt Y** to open plugin pane and list all panes.
-- **Alt O** to toggle between two panes.
-- **Alt L** to toggle star/unstar the focused pane.
-- **Alt I** navigate to next starred pane.
-- **Alt U** navigate to previous starred pane.
+- **Alt y** to open plugin pane and list all panes.
+- **Alt o** to toggle between two panes (`navigate_back`).
+- **Alt l** to toggle star/unstar the focused pane (`toggle_star`).
+- **Alt i** navigate to next starred pane (`next_star`).
+- **Alt u** navigate to previous starred pane (`previous_star`).
 
-### In the plugin pane
+In the plugin pane
 
-- **Up/Down** to move the selection in the list of panes.
-- **Enter** to navigate to the selected pane.
-- **Esc** to close the plugin without navigating to a pane.
-- **Space** to toggle star/unstar the selected pane.
+- **Up/Down** to move the selection in the list of panes (`plugin_select_up`/`plugin_select_down`).
+- **Enter** to navigate to the selected pane (`plugin_navigate_to`).
+- **Esc** to close the plugin without navigating to a pane (`plugin_hide`).
+- **Space** to toggle star/unstar the selected pane (`plugin_toggle_star`).
+
+Use the plugin configuration to customize the keybindings, e.g.,
+the following allows us to use **Ctrl p/n** to move the selection
+in the list of panes.
+
+<!-- markdownlint-disable MD013 -->
+
+```kdl
+plugins {
+    yapp location="https://github.com/shihanng/yapp/releases/download/<VERSION>/yapp.wasm" {
+        plugin_select_down "Ctrl n"
+        plugin_select_up "Ctrl p"
+    }
+}
+```
+
+<!-- markdownlint-enable MD013 -->
 
 ## Development
 

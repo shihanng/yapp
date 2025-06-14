@@ -6,7 +6,9 @@ edition = "2018"
 
 [dependencies]
 indexmap = "2.9.0"
+thiserror = "2.0.12"
 zellij-tile = "0.42.2"
 
 [dev-dependencies]
+insta = "1.43.1"
 rstest = "0.25.0"
