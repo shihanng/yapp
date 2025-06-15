@@ -4,6 +4,16 @@ expression: "got_configs.join(\"\")"
 ---
         keybinds {
             "normal" {
+                bind "Alt y" {
+                    MessagePluginId 42 {
+                        name "list_panes"
+                    }
+                }
+            }
+        }
+        
+        keybinds {
+            "normal" {
                 bind "Alt o" {
                     MessagePluginId 42 {
                         name "navigate_back"

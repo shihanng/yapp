@@ -6,6 +6,7 @@ use zellij_tile::prelude::BareKey;
 use zellij_tile::prelude::InputMode;
 use zellij_tile::prelude::KeyWithModifier;
 
+pub const LIST_PANES: &str = "list_panes";
 const NAVIGATE_BACK: &str = "navigate_back";
 const TOGGLE_STAR: &str = "toggle_star";
 const PREV_STAR: &str = "previous_star";
@@ -18,6 +19,7 @@ const PLUGIN_HIDE: &str = "plugin_hide";
 const PLUGIN_TOGGLE_STAR: &str = "plugin_toggle_star";
 
 pub struct Keybinds {
+    list_panes: KeyWithModifier,
     navigate_back: KeyWithModifier,
     toggle_star: KeyWithModifier,
     next_star: KeyWithModifier,
@@ -34,6 +36,7 @@ pub struct Keybinds {
 impl Default for Keybinds {
     fn default() -> Keybinds {
         Keybinds {
+            list_panes: KeyWithModifier::new(BareKey::Char('y')).with_alt_modifier(),
             navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
             toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
             next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
@@ -53,6 +56,10 @@ impl Keybinds {
     where
         F: FnMut(String, bool),
     {
+        configure(
+            create_keybind_config(base_mode, plugin_id, &self.list_panes, LIST_PANES),
+            false,
+        );
         configure(
             create_keybind_config(base_mode, plugin_id, &self.navigate_back, NAVIGATE_BACK),
             false,
@@ -97,6 +104,9 @@ impl TryFrom<BTreeMap<String, String>> for Keybinds {
         }
         if let Some(key) = map.get(PLUGIN_TOGGLE_STAR) {
             keybinds.plugin_toggle_star = KeyWithModifier::from_str(key)?
+        }
+        if let Some(key) = map.get(LIST_PANES) {
+            keybinds.list_panes = KeyWithModifier::from_str(key)?
         }
         if let Some(key) = map.get(NAVIGATE_BACK) {
             keybinds.navigate_back = KeyWithModifier::from_str(key)?

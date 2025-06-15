@@ -212,7 +212,9 @@ impl ZellijPlugin for State {
 
     fn pipe(&mut self, pipe_message: PipeMessage) -> bool {
         if pipe_message.source == PipeSource::Keybind && pipe_message.is_private {
-            if pipe_message.name == NAVIGATE_BACK {
+            if pipe_message.name == keybind::LIST_PANES {
+                show_self(true);
+            } else if pipe_message.name == NAVIGATE_BACK {
                 if let Some(id) = self.previous_focus {
                     focus_pane_with_id(id, true);
                 }

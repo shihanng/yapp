@@ -15,20 +15,8 @@ Put the following in your
 `config.kdl`.
 
 ```kdl
-shared_except "locked" {
-    bind "Alt y" {
-        LaunchOrFocusPlugin "yapp" {
-            floating true; move_to_focused_tab true;
-        }
-    }
-}
-
 load_plugins {
-    yapp
-}
-
-plugins {
-    yapp location="https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm"
+    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm"
 }
 ```
 
@@ -36,13 +24,13 @@ plugins {
 
 ### Global Keybindings
 
-| Keybinding | Description                                         |
-| ---------- | --------------------------------------------------- |
-| Alt y      | Open plugin pane and lists all available panes      |
-| Alt o      | Toggle between two panes (`navigate_back`)          |
-| Alt l      | Star/unstar the focused pane (`toggle_star`)        |
-| Alt i      | Navigate to next starred pane (`next_star`)         |
-| Alt u      | Navigate to previous starred pane (`previous_star`) |
+| Keybinding | Description                                                   |
+| ---------- | ------------------------------------------------------------- |
+| Alt y      | Open plugin pane and lists all available panes (`list_panes`) |
+| Alt o      | Toggle between two panes (`navigate_back`)                    |
+| Alt l      | Star/unstar the focused pane (`toggle_star`)                  |
+| Alt i      | Navigate to next starred pane (`next_star`)                   |
+| Alt u      | Navigate to previous starred pane (`previous_star`)           |
 
 <!-- markdownlint-disable MD013 -->
 
@@ -58,12 +46,13 @@ plugins {
 ### Customize Keybindings
 
 Use the plugin configuration to customize the keybindings, e.g.,
-the following allows us to use **Ctrl p/n** to move the selection
-in the list of panes.
+the following allows us to use **Alt x** to open the plugin pane and
+use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
-plugins {
-    yapp location="https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm" {
+load_plugins {
+    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm" {
+        list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
     }
