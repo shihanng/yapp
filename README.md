@@ -16,7 +16,7 @@ Put the following in your
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm"
+    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm"
 }
 ```
 
@@ -51,7 +51,7 @@ use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm" {
+    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
