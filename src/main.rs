@@ -37,11 +37,6 @@ struct State {
     plugin_id: Option<u32>,
 }
 
-const NAVIGATE_BACK: &str = "navigate_back";
-const TOGGLE_STAR: &str = "toggle_star";
-const PREV_STAR: &str = "previous_star";
-const NEXT_STAR: &str = "next_star";
-
 impl State {
     /// Compute the current state of panes that are visible on the plugin list,
     /// currently and previously focus panes.
@@ -214,21 +209,21 @@ impl ZellijPlugin for State {
         if pipe_message.source == PipeSource::Keybind && pipe_message.is_private {
             if pipe_message.name == keybind::LIST_PANES {
                 show_self(true);
-            } else if pipe_message.name == NAVIGATE_BACK {
+            } else if pipe_message.name == keybind::NAVIGATE_BACK {
                 if let Some(id) = self.previous_focus {
                     focus_pane_with_id(id, true);
                 }
-            } else if pipe_message.name == TOGGLE_STAR {
+            } else if pipe_message.name == keybind::TOGGLE_STAR {
                 if let Some(pane_id) = self.current_focus {
                     self.stars.toggle(pane_id);
                 }
-            } else if pipe_message.name == NEXT_STAR {
+            } else if pipe_message.name == keybind::NEXT_STAR {
                 if let Some(pane_id) = self.current_focus {
                     if let Some(id) = self.stars.next(&pane_id) {
                         focus_pane_with_id(*id, true);
                     }
                 }
-            } else if pipe_message.name == PREV_STAR {
+            } else if pipe_message.name == keybind::PREV_STAR {
                 if let Some(pane_id) = self.current_focus {
                     if let Some(id) = self.stars.previous(&pane_id) {
                         focus_pane_with_id(*id, true);

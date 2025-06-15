@@ -7,10 +7,10 @@ use zellij_tile::prelude::InputMode;
 use zellij_tile::prelude::KeyWithModifier;
 
 pub const LIST_PANES: &str = "list_panes";
-const NAVIGATE_BACK: &str = "navigate_back";
-const TOGGLE_STAR: &str = "toggle_star";
-const PREV_STAR: &str = "previous_star";
-const NEXT_STAR: &str = "next_star";
+pub const NAVIGATE_BACK: &str = "navigate_back";
+pub const TOGGLE_STAR: &str = "toggle_star";
+pub const PREV_STAR: &str = "previous_star";
+pub const NEXT_STAR: &str = "next_star";
 
 const PLUGIN_SELECT_DOWN: &str = "plugin_select_down";
 const PLUGIN_SELECT_UP: &str = "plugin_select_up";
