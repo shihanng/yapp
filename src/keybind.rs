@@ -56,26 +56,20 @@ impl Keybinds {
     where
         F: FnMut(String, bool),
     {
-        configure(
-            create_keybind_config(base_mode, plugin_id, &self.list_panes, LIST_PANES),
-            false,
-        );
-        configure(
-            create_keybind_config(base_mode, plugin_id, &self.navigate_back, NAVIGATE_BACK),
-            false,
-        );
-        configure(
-            create_keybind_config(base_mode, plugin_id, &self.toggle_star, TOGGLE_STAR),
-            false,
-        );
-        configure(
-            create_keybind_config(base_mode, plugin_id, &self.next_star, NEXT_STAR),
-            false,
-        );
-        configure(
-            create_keybind_config(base_mode, plugin_id, &self.previous_star, PREV_STAR),
-            false,
-        );
+        let key_actions = [
+            (&self.list_panes, LIST_PANES),
+            (&self.navigate_back, NAVIGATE_BACK),
+            (&self.toggle_star, TOGGLE_STAR),
+            (&self.next_star, NEXT_STAR),
+            (&self.previous_star, PREV_STAR),
+        ];
+
+        for (key, action) in key_actions {
+            configure(
+                create_keybind_config(base_mode, plugin_id, key, action),
+                false,
+            );
+        }
     }
 }
 
@@ -90,35 +84,23 @@ impl TryFrom<BTreeMap<String, String>> for Keybinds {
     fn try_from(map: BTreeMap<String, String>) -> Result<Self, Self::Error> {
         let mut keybinds = Keybinds::default();
 
-        if let Some(key) = map.get(PLUGIN_SELECT_DOWN) {
-            keybinds.plugin_select_down = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(PLUGIN_SELECT_UP) {
-            keybinds.plugin_select_up = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(PLUGIN_NAVIGATE_TO) {
-            keybinds.plugin_navigate_to = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(PLUGIN_HIDE) {
-            keybinds.plugin_hide = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(PLUGIN_TOGGLE_STAR) {
-            keybinds.plugin_toggle_star = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(LIST_PANES) {
-            keybinds.list_panes = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(NAVIGATE_BACK) {
-            keybinds.navigate_back = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(TOGGLE_STAR) {
-            keybinds.toggle_star = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(PREV_STAR) {
-            keybinds.previous_star = KeyWithModifier::from_str(key)?
-        }
-        if let Some(key) = map.get(NEXT_STAR) {
-            keybinds.next_star = KeyWithModifier::from_str(key)?
+        let key_mappings = [
+            (PLUGIN_SELECT_DOWN, &mut keybinds.plugin_select_down),
+            (PLUGIN_SELECT_UP, &mut keybinds.plugin_select_up),
+            (PLUGIN_NAVIGATE_TO, &mut keybinds.plugin_navigate_to),
+            (PLUGIN_HIDE, &mut keybinds.plugin_hide),
+            (PLUGIN_TOGGLE_STAR, &mut keybinds.plugin_toggle_star),
+            (LIST_PANES, &mut keybinds.list_panes),
+            (NAVIGATE_BACK, &mut keybinds.navigate_back),
+            (TOGGLE_STAR, &mut keybinds.toggle_star),
+            (PREV_STAR, &mut keybinds.previous_star),
+            (NEXT_STAR, &mut keybinds.next_star),
+        ];
+
+        for (key_name, keybind_field) in key_mappings {
+            if let Some(key_str) = map.get(key_name) {
+                *keybind_field = KeyWithModifier::from_str(key_str)?;
+            }
         }
 
         Ok(keybinds)
