@@ -16,7 +16,7 @@ Put the following in your
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm"
+    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm"
 }
 ```
 
@@ -24,34 +24,34 @@ load_plugins {
 
 ### Global Keybindings
 
-| Keybinding | Description                                                   |
-| ---------- | ------------------------------------------------------------- |
-| Alt y      | Open plugin pane and lists all available panes (`list_panes`) |
-| Alt o      | Toggle between two panes (`navigate_back`)                    |
-| Alt l      | Star/unstar the focused pane (`toggle_star`)                  |
-| Alt i      | Navigate to next starred pane (`next_star`)                   |
-| Alt u      | Navigate to previous starred pane (`previous_star`)           |
+| Keybinding | Description                                    | Config Key      |
+| ---------- | ---------------------------------------------- | --------------- |
+| Alt y      | Open plugin pane and lists all available panes | `list_panes`    |
+| Alt o      | Toggle between two panes                       | `navigate_back` |
+| Alt l      | Star/unstar the focused pane                   | `toggle_star`   |
+| Alt i      | Navigate to next starred pane                  | `next_star`     |
+| Alt u      | Navigate to previous starred pane              | `previous_star` |
 
 <!-- markdownlint-disable MD013 -->
 
 ### Plugin Keybindings
 
-| Keybinding | Description                                                                       |
-| ---------- | --------------------------------------------------------------------------------- |
-| Up/Down    | Move the selection in the list of panes (`plugin_select_up`/`plugin_select_down`) |
-| Enter      | Navigate to the selected pane (`plugin_navigate_to`)                              |
-| Esc        | Close the plugin without navigating to a pane (`plugin_hide`)                     |
-| Space      | Toggle star/unstar the selected pane (`plugin_toggle_star`)                       |
+| Keybinding | Description                                   | Config Key                              |
+| ---------- | --------------------------------------------- | --------------------------------------- |
+| Up/Down    | Move the selection in the list of panes       | `plugin_select_up`/`plugin_select_down` |
+| Enter      | Navigate to the selected pane                 | `plugin_navigate_to`                    |
+| Esc        | Close the plugin without navigating to a pane | `plugin_hide`                           |
+| Space      | Toggle star/unstar the selected pane          | `plugin_toggle_star`                    |
 
 ### Customize Keybindings
 
-Use the plugin configuration to customize the keybindings, e.g.,
+Use the config key in the plugin configuration to customize the keybindings, e.g.,
 the following allows us to use **Alt x** to open the plugin pane and
 use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.3.0/yapp.wasm" {
+    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
