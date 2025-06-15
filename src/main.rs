@@ -1,10 +1,5 @@
 mod keybind;
-#[cfg(not(target_arch = "wasm32"))]
-mod shim_native;
 mod star;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use shim_native::*;
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
