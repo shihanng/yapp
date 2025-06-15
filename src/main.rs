@@ -1,10 +1,5 @@
 mod keybind;
-#[cfg(not(target_arch = "wasm32"))]
-mod shim_native;
 mod star;
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use shim_native::*;
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -36,11 +31,6 @@ struct State {
 
     plugin_id: Option<u32>,
 }
-
-const NAVIGATE_BACK: &str = "navigate_back";
-const TOGGLE_STAR: &str = "toggle_star";
-const PREV_STAR: &str = "previous_star";
-const NEXT_STAR: &str = "next_star";
 
 impl State {
     /// Compute the current state of panes that are visible on the plugin list,
@@ -151,11 +141,6 @@ impl State {
 #[cfg(not(test))]
 register_plugin!(State);
 
-// NOTE: you can start a development environment inside Zellij by running `zellij -l zellij.kdl` in
-// this plugin's folder
-//
-// More info on plugins: https://zellij.dev/documentation/plugins
-
 impl ZellijPlugin for State {
     fn load(&mut self, configuration: BTreeMap<String, String>) {
         self.keybinds = keybind::Keybinds::try_from(configuration).unwrap();
@@ -217,21 +202,23 @@ impl ZellijPlugin for State {
 
     fn pipe(&mut self, pipe_message: PipeMessage) -> bool {
         if pipe_message.source == PipeSource::Keybind && pipe_message.is_private {
-            if pipe_message.name == NAVIGATE_BACK {
+            if pipe_message.name == keybind::LIST_PANES {
+                show_self(true);
+            } else if pipe_message.name == keybind::NAVIGATE_BACK {
                 if let Some(id) = self.previous_focus {
                     focus_pane_with_id(id, true);
                 }
-            } else if pipe_message.name == TOGGLE_STAR {
+            } else if pipe_message.name == keybind::TOGGLE_STAR {
                 if let Some(pane_id) = self.current_focus {
                     self.stars.toggle(pane_id);
                 }
-            } else if pipe_message.name == NEXT_STAR {
+            } else if pipe_message.name == keybind::NEXT_STAR {
                 if let Some(pane_id) = self.current_focus {
                     if let Some(id) = self.stars.next(&pane_id) {
                         focus_pane_with_id(*id, true);
                     }
                 }
-            } else if pipe_message.name == PREV_STAR {
+            } else if pipe_message.name == keybind::PREV_STAR {
                 if let Some(pane_id) = self.current_focus {
                     if let Some(id) = self.stars.previous(&pane_id) {
                         focus_pane_with_id(*id, true);
