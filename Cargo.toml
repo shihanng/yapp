@@ -1,7 +1,7 @@
 [package]
 name = "zellij-pane-picker"
 version = "0.1.0"
-authors = ["Aram Drevekenin <aram@poor.dev>"]
+authors = ["Shi Han NG <shihanng@gmail.com>"]
 edition = "2018"
 
 [dependencies]
