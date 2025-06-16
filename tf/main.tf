@@ -7,6 +7,17 @@ module "github" {
   repository = "zellij-pane-picker"
 }
 
+resource "github_repository" "this" {
+  name                   = "zellij-pane-picker"
+  description            = "Quickly switch, star, and jump to panes with customizable keyboard shortcuts"
+  visibility             = "public"
+  delete_branch_on_merge = true
+  has_downloads          = true
+  has_issues             = true
+  has_projects           = true
+  vulnerability_alerts   = true
+}
+
 terraform {
   required_version = "~> 1.11"
 
