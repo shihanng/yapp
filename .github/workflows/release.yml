@@ -20,4 +20,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          files: ./target/wasm32-wasip1/release/yapp.wasm
+          files: ./target/wasm32-wasip1/release/zellij-pane-picker.wasm
