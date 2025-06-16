@@ -15,7 +15,7 @@ Put the following in your
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.4.0/zellij-pane-picker.wasm"
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm"
 }
 ```
 
@@ -50,7 +50,7 @@ use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.4.0/zellij-pane-picker.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
