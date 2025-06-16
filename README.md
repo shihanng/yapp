@@ -1,12 +1,11 @@
-# YAPP
+# Zellij Pane Picker
 
-![GitHub branch check runs](https://img.shields.io/github/check-runs/shihanng/yapp/main)
-![GitHub Release](https://img.shields.io/github/v/release/shihanng/yapp)
-![GitHub License](https://img.shields.io/github/license/shihanng/yapp)
+![GitHub branch check runs](https://img.shields.io/github/check-runs/shihanng/zellij-pane-picker/main)
+![GitHub Release](https://img.shields.io/github/v/release/shihanng/zellij-pane-picker)
+![GitHub License](https://img.shields.io/github/license/shihanng/zellij-pane-picker)
 
-Yet Another (Zellij) Panes Picker.
-With YAPP, you can quickly switch, star, and jump to panes
-using customizable keyboard shortcuts.
+With [Zellij](https://zellij.dev/) Panes Picker,
+you can quickly switch, star, and jump to panes using customizable keyboard shortcuts.
 
 ## Installation
 
@@ -16,7 +15,7 @@ Put the following in your
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm"
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.4.0/zellij-pane-picker.wasm"
 }
 ```
 
@@ -51,7 +50,7 @@ use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/yapp/releases/download/v0.4.0/yapp.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.4.0/zellij-pane-picker.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
