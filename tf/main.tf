@@ -4,7 +4,7 @@ provider "github" {
 
 module "github" {
   source     = "github.com/shihanng/tf-github-repo?ref=v0.1.0"
-  repository = "yapp"
+  repository = "zellij-pane-picker"
 }
 
 terraform {
@@ -21,7 +21,7 @@ terraform {
     organization = "shihan"
 
     workspaces {
-      name = "yapp"
+      name = "zellij-pane-picker"
     }
   }
 }
