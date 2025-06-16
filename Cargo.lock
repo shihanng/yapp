@@ -3261,17 +3261,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea2f10b9bb0928dfb1b42b65e1f9e36f7f54dbdf08457afefb38afcdec4fa2bb"
 
 [[package]]
-name = "yapp"
-version = "0.1.0"
-dependencies = [
- "indexmap 2.9.0",
- "insta",
- "rstest",
- "thiserror 2.0.12",
- "zellij-tile",
-]
-
-[[package]]
 name = "yoke"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3293,6 +3282,17 @@ dependencies = [
  "quote",
  "syn 2.0.101",
  "synstructure",
+]
+
+[[package]]
+name = "zellij-pane-picker"
+version = "0.1.0"
+dependencies = [
+ "indexmap 2.9.0",
+ "insta",
+ "rstest",
+ "thiserror 2.0.12",
+ "zellij-tile",
 ]
 
 [[package]]
