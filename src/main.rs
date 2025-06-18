@@ -347,7 +347,8 @@ mod tests {
         assert_eq!(state.selected, 0);
     }
 
-    fn setup_panes() -> Vec<Pane> {
+    #[fixture]
+    fn panes() -> Vec<Pane> {
         vec![
             Pane {
                 pane_title: String::from("Pane 1"),
@@ -362,10 +363,10 @@ mod tests {
         ]
     }
 
-    #[test]
-    fn select_downward() {
+    #[rstest]
+    fn select_downward(panes: Vec<Pane>) {
         let mut state = State {
-            panes: setup_panes(),
+            panes,
             selected: 0,
             ..Default::default()
         };
@@ -374,10 +375,10 @@ mod tests {
         assert_eq!(state.selected, 1);
     }
 
-    #[test]
-    fn select_upward() {
+    #[rstest]
+    fn select_upward(panes: Vec<Pane>) {
         let mut state = State {
-            panes: setup_panes(),
+            panes,
             selected: 1,
             ..Default::default()
         };
@@ -386,10 +387,10 @@ mod tests {
         assert_eq!(state.selected, 0);
     }
 
-    #[test]
-    fn select_downward_overflow() {
+    #[rstest]
+    fn select_downward_overflow(panes: Vec<Pane>) {
         let mut state = State {
-            panes: setup_panes(),
+            panes,
             selected: 0,
             ..Default::default()
         };
@@ -399,10 +400,10 @@ mod tests {
         assert_eq!(state.selected, 0);
     }
 
-    #[test]
-    fn select_upward_overflow() {
+    #[rstest]
+    fn select_upward_overflow(panes: Vec<Pane>) {
         let mut state = State {
-            panes: setup_panes(),
+            panes,
             selected: 1,
             ..Default::default()
         };
