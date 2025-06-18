@@ -322,15 +322,15 @@ mod tests {
 
         state.update_state();
 
-        let items = state.panes_as_nested_list();
-
-        assert_eq!(items.len(), 3);
-        assert_eq!(items[0].serialize(), Text::new("Tab 1 Pane 1").serialize());
-        assert_eq!(
-            items[1].serialize(),
-            Text::new("Tab 1 Pane 2").selected().serialize()
-        );
-        assert_eq!(items[2].serialize(), Text::new("Tab 2 Pane 55").serialize());
+        // Borrowed from Zellij's print_nested_list.
+        // Use cat *.snap to see the result.
+        let items = state
+            .panes_as_nested_list()
+            .into_iter()
+            .map(|i| i.serialize())
+            .collect::<Vec<_>>()
+            .join(";");
+        insta::assert_snapshot!(format!("\u{1b}Pznested_list;{}\u{1b}\\", items));
     }
 
     #[test]
