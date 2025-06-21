@@ -169,8 +169,6 @@ impl State {
     }
 }
 
-// Truncate the string if the length of the string is larger than max_len.
-// The resulting string should fn clip(string: &str, max_len: usize) -> String {
 fn clip(string: &str, max_len: usize) -> String {
     let ellipsis = "...";
 
