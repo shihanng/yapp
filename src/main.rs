@@ -118,9 +118,14 @@ impl State {
         );
 
         // Calculate the width of pane title column.
-        let pane_title_width = width - (star.len() + 1 + tab_name_width + 1 + 3 + 1);
+        let pane_title_width = width - (star.len() + 1 + tab_name_width + 1 + 3);
 
-        let mut table = Table::new().add_row(vec![" ", "Tab", " ID", "Pane Title"]);
+        let mut table = Table::new().add_row(vec![
+            " ",
+            "Tab",
+            " ID",
+            &format!("{:<width$}", "Pane Title", width = pane_title_width),
+        ]);
 
         for (i, pane) in self.panes.iter().enumerate() {
             let pane_id = match pane.pane_id {
