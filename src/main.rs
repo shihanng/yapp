@@ -1,6 +1,6 @@
 mod keybind;
 mod star;
-
+use std::cmp::min;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use zellij_tile::prelude::*;
@@ -101,28 +101,57 @@ impl State {
         self.panes = panes;
     }
 
-    fn panes_as_nested_list(&self) -> Vec<NestedListItem> {
-        let mut items = Vec::new();
+    fn panes_as_table(&self, width: usize) -> Table {
+        let star = "*";
+        let max_tab_col_length = 12;
+
+        // Calculate the width of tab name column.
+        let tab_name_width = min(
+            self.panes
+                .iter()
+                .map(|pane| pane.tab_name.len())
+                .max()
+                .unwrap_or(max_tab_col_length),
+            max_tab_col_length,
+        );
+
+        // Calculate the width of pane title column.
+        let pane_title_width = width - (star.len() + 1 + tab_name_width + 1 + 3 + 1);
+
+        let mut table = Table::new().add_row(vec![" ", "Tab", " ID", "Pane Title"]);
 
         for (i, pane) in self.panes.iter().enumerate() {
-            let mut item = NestedListItem::new(format!(
-                "{} {}{}",
-                pane.tab_name,
-                pane.pane_title,
-                if self.stars.has(&pane.pane_id) {
-                    " *"
-                } else {
-                    ""
-                }
-            ));
+            let pane_id = match pane.pane_id {
+                PaneId::Terminal(id) => id,
+                PaneId::Plugin(id) => id,
+            };
+
+            let mut star_column = Text::new(if self.stars.has(&pane.pane_id) {
+                star
+            } else {
+                " "
+            })
+            .color_range(0, ..);
+            let mut tab_name_column = Text::new(clip(&pane.tab_name, tab_name_width));
+            let mut pane_id_column = Text::new(format!("{:3}", pane_id));
+            let mut pane_title_column = Text::new(clip(&pane.pane_title, pane_title_width));
 
             if i == self.selected {
-                item = item.selected();
+                star_column = star_column.selected();
+                tab_name_column = tab_name_column.selected();
+                pane_id_column = pane_id_column.selected();
+                pane_title_column = pane_title_column.selected();
             }
 
-            items.push(item);
+            table = table.add_styled_row(vec![
+                star_column,
+                tab_name_column,
+                pane_id_column,
+                pane_title_column,
+            ]);
         }
-        items
+
+        table
     }
 
     fn select_downward(&mut self) {
@@ -135,6 +164,23 @@ impl State {
         if !self.panes.is_empty() {
             self.selected = (self.selected + self.panes.len() - 1) % self.panes.len();
         }
+    }
+}
+
+// Truncate the string if the length of the string is larger than max_len.
+// The resulting string should fn clip(string: &str, max_len: usize) -> String {
+fn clip(string: &str, max_len: usize) -> String {
+    let ellipsis = "...";
+
+    if string.len() > max_len {
+        if max_len >= ellipsis.len() {
+            format!("{}{}", &string[..(max_len - ellipsis.len())], ellipsis)
+        } else {
+            // return ellipsis to max_len
+            ellipsis.chars().take(max_len).collect::<String>()
+        }
+    } else {
+        string.to_string()
     }
 }
 
@@ -230,9 +276,9 @@ impl ZellijPlugin for State {
         false
     }
 
-    fn render(&mut self, _rows: usize, _cols: usize) {
-        let nested_list = self.panes_as_nested_list();
-        print_nested_list(nested_list);
+    fn render(&mut self, rows: usize, cols: usize) {
+        let nested_list = self.panes_as_table(cols - 4);
+        print_table_with_coordinates(nested_list, 1, 1, Some(cols - 1), Some(rows - 1));
     }
 }
 
@@ -242,7 +288,7 @@ mod tests {
     use rstest::*;
 
     #[test]
-    fn panes_as_nested_list() {
+    fn panes_as_table() {
         let mut state = State {
             tab_infos: vec![
                 TabInfo {
@@ -320,17 +366,13 @@ mod tests {
             ..Default::default()
         };
 
+        state.stars.toggle(PaneId::Terminal(2));
         state.update_state();
 
-        // Borrowed from Zellij's print_nested_list.
-        // Use cat *.snap to see the result.
-        let items = state
-            .panes_as_nested_list()
-            .into_iter()
-            .map(|i| i.serialize())
-            .collect::<Vec<_>>()
-            .join(";");
-        insta::assert_snapshot!(format!("\u{1b}Pznested_list;{}\u{1b}\\", items));
+        insta::assert_snapshot!(format!(
+            "\u{1b}Pztable;{}",
+            state.panes_as_table(20).serialize()
+        ));
     }
 
     #[test]
@@ -517,5 +559,15 @@ mod tests {
 
         assert_eq!(state.current_focus, Some(new_current_focus));
         assert_eq!(state.previous_focus, new_previous_focus);
+    }
+
+    #[rstest]
+    #[case("Lorem ipsum dolor sit amet", 100, "Lorem ipsum dolor sit amet".to_string())]
+    #[case("Lorem ipsum dolor sit amet", 5, "Lo...".to_string())]
+    #[case("Lorem ipsum dolor sit amet", 2, "..".to_string())]
+    #[case("Lorem ipsum dolor sit amet", 0, "".to_string())]
+    fn clip_text(#[case] text: &str, #[case] max_len: usize, #[case] expected: String) {
+        let got = clip(text, max_len);
+        assert_eq!(expected, got);
     }
 }
