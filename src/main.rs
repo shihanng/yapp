@@ -227,16 +227,16 @@ impl ZellijPlugin for State {
                 self.update_state();
             }
             Event::Key(key) => {
-                if key == self.keybinds.plugin_select_down {
+                if Some(key.clone()) == self.keybinds.plugin_select_down {
                     self.select_downward();
-                } else if key == self.keybinds.plugin_select_up {
+                } else if Some(key.clone()) == self.keybinds.plugin_select_up {
                     self.select_upward()
-                } else if key == self.keybinds.plugin_navigate_to {
+                } else if Some(key.clone()) == self.keybinds.plugin_navigate_to {
                     focus_pane_with_id(self.panes[self.selected].pane_id, true);
                     hide_self();
-                } else if key == self.keybinds.plugin_hide {
+                } else if Some(key.clone()) == self.keybinds.plugin_hide {
                     hide_self();
-                } else if key == self.keybinds.plugin_toggle_star {
+                } else if Some(key.clone()) == self.keybinds.plugin_toggle_star {
                     let selected_pane_id = self.panes[self.selected].pane_id;
                     self.stars.toggle(selected_pane_id);
                 }

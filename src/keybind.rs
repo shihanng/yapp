@@ -19,34 +19,34 @@ const PLUGIN_HIDE: &str = "plugin_hide";
 const PLUGIN_TOGGLE_STAR: &str = "plugin_toggle_star";
 
 pub struct Keybinds {
-    list_panes: KeyWithModifier,
-    navigate_back: KeyWithModifier,
-    toggle_star: KeyWithModifier,
-    next_star: KeyWithModifier,
-    previous_star: KeyWithModifier,
+    list_panes: Option<KeyWithModifier>,
+    navigate_back: Option<KeyWithModifier>,
+    toggle_star: Option<KeyWithModifier>,
+    next_star: Option<KeyWithModifier>,
+    previous_star: Option<KeyWithModifier>,
 
     // These are key bindings while inside the plugin pane.
-    pub plugin_select_down: KeyWithModifier,
-    pub plugin_select_up: KeyWithModifier,
-    pub plugin_navigate_to: KeyWithModifier,
-    pub plugin_hide: KeyWithModifier,
-    pub plugin_toggle_star: KeyWithModifier,
+    pub plugin_select_down: Option<KeyWithModifier>,
+    pub plugin_select_up: Option<KeyWithModifier>,
+    pub plugin_navigate_to: Option<KeyWithModifier>,
+    pub plugin_hide: Option<KeyWithModifier>,
+    pub plugin_toggle_star: Option<KeyWithModifier>,
 }
 
 impl Default for Keybinds {
     fn default() -> Keybinds {
         Keybinds {
-            list_panes: KeyWithModifier::new(BareKey::Char('y')).with_alt_modifier(),
-            navigate_back: KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier(),
-            toggle_star: KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier(),
-            next_star: KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier(),
-            previous_star: KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier(),
+            list_panes: Some(KeyWithModifier::new(BareKey::Char('y')).with_alt_modifier()),
+            navigate_back: Some(KeyWithModifier::new(BareKey::Char('o')).with_alt_modifier()),
+            toggle_star: Some(KeyWithModifier::new(BareKey::Char('l')).with_alt_modifier()),
+            next_star: Some(KeyWithModifier::new(BareKey::Char('i')).with_alt_modifier()),
+            previous_star: Some(KeyWithModifier::new(BareKey::Char('u')).with_alt_modifier()),
 
-            plugin_select_down: KeyWithModifier::new(BareKey::Down),
-            plugin_select_up: KeyWithModifier::new(BareKey::Up),
-            plugin_navigate_to: KeyWithModifier::new(BareKey::Enter),
-            plugin_hide: KeyWithModifier::new(BareKey::Esc),
-            plugin_toggle_star: KeyWithModifier::new(BareKey::Char(' ')),
+            plugin_select_down: Some(KeyWithModifier::new(BareKey::Down)),
+            plugin_select_up: Some(KeyWithModifier::new(BareKey::Up)),
+            plugin_navigate_to: Some(KeyWithModifier::new(BareKey::Enter)),
+            plugin_hide: Some(KeyWithModifier::new(BareKey::Esc)),
+            plugin_toggle_star: Some(KeyWithModifier::new(BareKey::Char(' '))),
         }
     }
 }
@@ -65,10 +65,12 @@ impl Keybinds {
         ];
 
         for (key, action) in key_actions {
-            configure(
-                create_keybind_config(base_mode, plugin_id, key, action),
-                false,
-            );
+            if let Some(key) = key {
+                configure(
+                    create_keybind_config(base_mode, plugin_id, key, action),
+                    false,
+                );
+            }
         }
     }
 }
@@ -99,7 +101,11 @@ impl TryFrom<BTreeMap<String, String>> for Keybinds {
 
         for (key_name, keybind_field) in key_mappings {
             if let Some(key_str) = map.get(key_name) {
-                *keybind_field = KeyWithModifier::from_str(key_str)?;
+                if !key_str.is_empty() {
+                    *keybind_field = Some(KeyWithModifier::from_str(key_str)?);
+                } else {
+                    *keybind_field = None;
+                }
             }
         }
 
@@ -138,7 +144,10 @@ mod tests {
 
     #[test]
     fn test_bind_global_keys() {
-        let mut keybinds = Keybinds::default();
+        let mut keybinds = Keybinds {
+            toggle_star: None,
+            ..Default::default()
+        };
         let base_mode = InputMode::Normal;
         let plugin_id = 42;
         let mut got_configs = Vec::new();
@@ -154,6 +163,7 @@ mod tests {
     fn test_try_from() {
         let map = BTreeMap::from([
             (PLUGIN_SELECT_DOWN.to_string(), String::from("Ctrl Down")),
+            (PLUGIN_HIDE.to_string(), String::from("")),
             (String::from("unknown_key"), String::from("Invalid")),
         ]);
 
@@ -161,8 +171,12 @@ mod tests {
 
         assert_eq!(
             keybinds.plugin_select_down,
-            KeyWithModifier::new(BareKey::Down).with_ctrl_modifier(),
+            Some(KeyWithModifier::new(BareKey::Down).with_ctrl_modifier()),
         );
-        assert_eq!(keybinds.plugin_select_up, KeyWithModifier::new(BareKey::Up),);
+        assert_eq!(
+            keybinds.plugin_select_up,
+            Some(KeyWithModifier::new(BareKey::Up),)
+        );
+        assert_eq!(keybinds.plugin_hide, None);
     }
 }
