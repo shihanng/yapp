@@ -58,6 +58,16 @@ load_plugins {
 }
 ```
 
+Use empty string to disable a keybinding.
+
+```kdl
+load_plugins {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+        list_panes ""
+    }
+}
+```
+
 <!-- markdownlint-enable MD013 -->
 
 ## Development

@@ -24,16 +24,6 @@ expression: "got_configs.join(\"\")"
         
         keybinds {
             "normal" {
-                bind "Alt l" {
-                    MessagePluginId 42 {
-                        name "toggle_star"
-                    }
-                }
-            }
-        }
-        
-        keybinds {
-            "normal" {
                 bind "Alt i" {
                     MessagePluginId 42 {
                         name "next_star"
