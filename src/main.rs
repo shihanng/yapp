@@ -24,6 +24,8 @@ struct State {
     previous_focus: Option<PaneId>,
     selected: usize,
 
+    search_key: String,
+
     stars: star::Star,
 
     bound_key: bool,
@@ -233,12 +235,18 @@ impl ZellijPlugin for State {
                     self.select_upward()
                 } else if Some(key.clone()) == self.keybinds.plugin_navigate_to {
                     focus_pane_with_id(self.panes[self.selected].pane_id, true);
+                    self.search_key.clear();
                     hide_self();
                 } else if Some(key.clone()) == self.keybinds.plugin_hide {
+                    self.search_key.clear();
                     hide_self();
                 } else if Some(key.clone()) == self.keybinds.plugin_toggle_star {
                     let selected_pane_id = self.panes[self.selected].pane_id;
                     self.stars.toggle(selected_pane_id);
+                } else if let BareKey::Char(c) = key.bare_key {
+                    if key.has_no_modifiers() {
+                        self.search_key.push(c);
+                    }
                 }
             }
             _ => {}
@@ -277,8 +285,18 @@ impl ZellijPlugin for State {
     }
 
     fn render(&mut self, rows: usize, cols: usize) {
+        print_text_with_coordinates(
+            Text::new(format!("[SEARCH] {}", self.search_key))
+                .color_range(1, 0..=8)
+                .color_range(3, 9..),
+            1,
+            1,
+            Some(cols - 1),
+            Some(1),
+        );
+
         let nested_list = self.panes_as_table(cols - 4);
-        print_table_with_coordinates(nested_list, 1, 1, Some(cols - 1), Some(rows - 1));
+        print_table_with_coordinates(nested_list, 1, 3, Some(cols - 1), Some(rows - 2));
     }
 }
 
