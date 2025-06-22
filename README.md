@@ -38,7 +38,7 @@ load_plugins {
 
 plugins {
     ...
-    zellij-pane-picker location="https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+    zellij-pane-picker location="https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
         list_panes ""
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
@@ -93,7 +93,7 @@ use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
@@ -105,7 +105,7 @@ Use empty string to disable a keybinding.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
         list_panes ""
     }
 }
