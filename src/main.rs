@@ -15,11 +15,30 @@ struct Pane {
     tab_name: String,
     pane_id: PaneId,
     pane_title: String,
+
+    search_string: String,
+}
+
+impl Pane {
+    fn new(tab_name: String, pane_id: PaneId, pane_title: String) -> Self {
+        let just_pane_id = match pane_id {
+            PaneId::Terminal(id) => id,
+            PaneId::Plugin(id) => id,
+        };
+
+        let search_string = format!("{}  {} {}", tab_name, just_pane_id, pane_title);
+        Self {
+            tab_name,
+            pane_id,
+            pane_title,
+            search_string,
+        }
+    }
 }
 
 impl AsRef<str> for Pane {
     fn as_ref(&self) -> &str {
-        &self.pane_title
+        &self.search_string
     }
 }
 
@@ -70,11 +89,11 @@ impl State {
                         PaneId::Terminal(pane_info.id)
                     };
 
-                    panes.push(Pane {
-                        tab_name: tab_info.name.clone(),
+                    panes.push(Pane::new(
+                        tab_info.name.clone(),
                         pane_id,
-                        pane_title: pane_info.title.clone(),
-                    });
+                        pane_info.title.clone(),
+                    ));
 
                     if pane_info.is_focused && tab_info.active && !pane_info.is_plugin {
                         current_focus = Some(pane_id)
@@ -137,10 +156,8 @@ impl State {
 
         self.display_panes = search_result
             .iter()
-            .map(|(pane, _)| Pane {
-                tab_name: pane.tab_name.clone(),
-                pane_id: pane.pane_id,
-                pane_title: pane.pane_title.clone(),
+            .map(|(pane, _)| {
+                Pane::new(pane.tab_name.clone(), pane.pane_id, pane.pane_title.clone())
             })
             .collect();
 
@@ -440,16 +457,16 @@ mod tests {
     #[fixture]
     fn display_panes() -> Vec<Pane> {
         vec![
-            Pane {
-                pane_title: String::from("Pane 1"),
-                pane_id: PaneId::Terminal(1),
-                tab_name: String::from("Tab"),
-            },
-            Pane {
-                pane_title: String::from("Pane 2"),
-                pane_id: PaneId::Terminal(2),
-                tab_name: String::from("Tab"),
-            },
+            Pane::new(
+                String::from("Tab"),
+                PaneId::Terminal(1),
+                String::from("Pane 1"),
+            ),
+            Pane::new(
+                String::from("Tab"),
+                PaneId::Terminal(2),
+                String::from("Pane 2"),
+            ),
         ]
     }
 
