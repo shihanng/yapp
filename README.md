@@ -4,6 +4,8 @@
 ![GitHub Release](https://img.shields.io/github/v/release/shihanng/zellij-pane-picker)
 ![GitHub License](https://img.shields.io/github/license/shihanng/zellij-pane-picker)
 
+![Social preview of the project](./assets/social-preview.png)
+
 With [Zellij](https://zellij.dev/) Panes Picker,
 you can quickly switch, star, and jump to panes using customizable keyboard shortcuts.
 
