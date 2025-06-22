@@ -275,6 +275,8 @@ impl ZellijPlugin for State {
                     if key.has_no_modifiers() {
                         self.search_key.push(c);
                     }
+                } else if let BareKey::Backspace = key.bare_key {
+                    self.search_key.pop();
                 }
             }
             _ => {}
