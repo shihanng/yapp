@@ -4,6 +4,8 @@
 ![GitHub Release](https://img.shields.io/github/v/release/shihanng/zellij-pane-picker)
 ![GitHub License](https://img.shields.io/github/license/shihanng/zellij-pane-picker)
 
+![Social preview of the project](./assets/social-preview.png)
+
 With [Zellij](https://zellij.dev/) Panes Picker,
 you can quickly switch, star, and jump to panes using customizable keyboard shortcuts.
 
@@ -13,13 +15,54 @@ Put the following in your
 [Zellij configuration](https://zellij.dev/documentation/configuration.html)
 `config.kdl`.
 
+<!-- markdownlint-disable MD013 -->
+
 ```kdl
+keybinds clear-defaults=true {
+...
+    shared_except "locked" {
+        ...
+        bind "Alt y" {
+            LaunchOrFocusPlugin "zellij-pane-picker" {
+                floating true; move_to_focused_tab true;
+            }
+        }
+        ...
+    }
+...
+}
+
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm"
+    zellij-pane-picker
+}
+
+plugins {
+    ...
+    zellij-pane-picker location="https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
+        list_panes ""
+        plugin_select_down "Ctrl n"
+        plugin_select_up "Ctrl p"
+    }
+    ...
 }
 ```
 
+<!-- markdownlint-enable MD013 -->
+
 ## Usage
+
+In the picker pane, we can
+
+- Select and navigate to a pane
+- Filter panes in the list
+- Star/unstar a pane
+
+![Select, star, filter panes](./assets/screencast-nav-search-star.gif)
+
+Use `Alt i/u` to cycle between starred panes.
+Use `Alt o` to toggle between two panes.
+
+![Toggles](./assets/screencast-navigation.gif)
 
 ### Global Keybindings
 
@@ -50,7 +93,7 @@ use **Ctrl p/n** to move the selection in the list of panes.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
         list_panes "Alt x"
         plugin_select_down "Ctrl n"
         plugin_select_up "Ctrl p"
@@ -62,7 +105,7 @@ Use empty string to disable a keybinding.
 
 ```kdl
 load_plugins {
-    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.5.0/zellij-pane-picker.wasm" {
+    "https://github.com/shihanng/zellij-pane-picker/releases/download/v0.6.0/zellij-pane-picker.wasm" {
         list_panes ""
     }
 }
