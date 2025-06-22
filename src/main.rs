@@ -1,5 +1,7 @@
 mod keybind;
 mod star;
+use nucleo_matcher::pattern::{CaseMatching, Normalization, Pattern};
+use nucleo_matcher::{Config, Matcher};
 use std::cmp::min;
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -8,10 +10,17 @@ use zellij_tile::prelude::*;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 struct Pane {
     tab_name: String,
     pane_id: PaneId,
     pane_title: String,
+}
+
+impl AsRef<str> for Pane {
+    fn as_ref(&self) -> &str {
+        &self.pane_title
+    }
 }
 
 #[derive(Default)]
@@ -20,11 +29,12 @@ struct State {
     pane_infos: HashMap<usize, Vec<PaneInfo>>,
 
     panes: Vec<Pane>,
+
     current_focus: Option<PaneId>,
     previous_focus: Option<PaneId>,
-    selected: usize,
-
     search_key: String,
+    display_panes: Vec<Pane>,
+    selected: usize, // selected always operates on display_panes.
 
     stars: star::Star,
 
@@ -103,7 +113,7 @@ impl State {
         self.panes = panes;
     }
 
-    fn panes_as_table(&self, width: usize) -> Table {
+    fn panes_as_table(&mut self, width: usize) -> Table {
         let star = "*";
         let max_tab_col_length = 12;
 
@@ -120,6 +130,20 @@ impl State {
         // Calculate the width of pane title column.
         let pane_title_width = width - (star.len() + 1 + tab_name_width + 1 + 3);
 
+        let mut matcher = Matcher::new(Config::DEFAULT.match_paths());
+        let search_result =
+            Pattern::parse(&self.search_key, CaseMatching::Ignore, Normalization::Smart)
+                .match_list(&self.panes, &mut matcher);
+
+        self.display_panes = search_result
+            .iter()
+            .map(|(pane, _)| Pane {
+                tab_name: pane.tab_name.clone(),
+                pane_id: pane.pane_id,
+                pane_title: pane.pane_title.clone(),
+            })
+            .collect();
+
         let mut table = Table::new().add_row(vec![
             " ",
             "Tab",
@@ -127,7 +151,7 @@ impl State {
             &format!("{:<width$}", "Pane Title", width = pane_title_width),
         ]);
 
-        for (i, pane) in self.panes.iter().enumerate() {
+        for (i, pane) in self.display_panes.iter().enumerate() {
             let pane_id = match pane.pane_id {
                 PaneId::Terminal(id) => id,
                 PaneId::Plugin(id) => id,
@@ -162,14 +186,15 @@ impl State {
     }
 
     fn select_downward(&mut self) {
-        if !self.panes.is_empty() {
-            self.selected = (self.selected + 1) % self.panes.len();
+        if !self.display_panes.is_empty() {
+            self.selected = (self.selected + 1) % self.display_panes.len();
         }
     }
 
     fn select_upward(&mut self) {
-        if !self.panes.is_empty() {
-            self.selected = (self.selected + self.panes.len() - 1) % self.panes.len();
+        if !self.display_panes.is_empty() {
+            self.selected =
+                (self.selected + self.display_panes.len() - 1) % self.display_panes.len();
         }
     }
 }
@@ -237,14 +262,14 @@ impl ZellijPlugin for State {
                 } else if Some(key.clone()) == self.keybinds.plugin_select_up {
                     self.select_upward()
                 } else if Some(key.clone()) == self.keybinds.plugin_navigate_to {
-                    focus_pane_with_id(self.panes[self.selected].pane_id, true);
+                    focus_pane_with_id(self.display_panes[self.selected].pane_id, true);
                     self.search_key.clear();
                     hide_self();
                 } else if Some(key.clone()) == self.keybinds.plugin_hide {
                     self.search_key.clear();
                     hide_self();
                 } else if Some(key.clone()) == self.keybinds.plugin_toggle_star {
-                    let selected_pane_id = self.panes[self.selected].pane_id;
+                    let selected_pane_id = self.display_panes[self.selected].pane_id;
                     self.stars.toggle(selected_pane_id);
                 } else if let BareKey::Char(c) = key.bare_key {
                     if key.has_no_modifiers() {
@@ -411,7 +436,7 @@ mod tests {
     }
 
     #[fixture]
-    fn panes() -> Vec<Pane> {
+    fn display_panes() -> Vec<Pane> {
         vec![
             Pane {
                 pane_title: String::from("Pane 1"),
@@ -427,9 +452,9 @@ mod tests {
     }
 
     #[rstest]
-    fn select_downward(panes: Vec<Pane>) {
+    fn select_downward(display_panes: Vec<Pane>) {
         let mut state = State {
-            panes,
+            display_panes,
             selected: 0,
             ..Default::default()
         };
@@ -439,9 +464,9 @@ mod tests {
     }
 
     #[rstest]
-    fn select_upward(panes: Vec<Pane>) {
+    fn select_upward(display_panes: Vec<Pane>) {
         let mut state = State {
-            panes,
+            display_panes,
             selected: 1,
             ..Default::default()
         };
@@ -451,9 +476,9 @@ mod tests {
     }
 
     #[rstest]
-    fn select_downward_overflow(panes: Vec<Pane>) {
+    fn select_downward_overflow(display_panes: Vec<Pane>) {
         let mut state = State {
-            panes,
+            display_panes,
             selected: 0,
             ..Default::default()
         };
@@ -464,9 +489,9 @@ mod tests {
     }
 
     #[rstest]
-    fn select_upward_overflow(panes: Vec<Pane>) {
+    fn select_upward_overflow(display_panes: Vec<Pane>) {
         let mut state = State {
-            panes,
+            display_panes,
             selected: 1,
             ..Default::default()
         };
