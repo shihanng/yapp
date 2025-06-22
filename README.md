@@ -51,6 +51,19 @@ plugins {
 
 ## Usage
 
+In the picker pane, we can
+
+- Select and navigate to a pane
+- Filter panes in the list
+- Star/unstar a pane
+
+![Select, star, filter panes](./assets/screencast-nav-search-star.gif)
+
+Use `Alt i/u` to cycle between starred panes.
+Use `Alt o` to toggle between two panes.
+
+![Toggles](./assets/screencast-navigation.gif)
+
 ### Global Keybindings
 
 | Keybinding | Description                                    | Config Key      |
