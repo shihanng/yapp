@@ -146,7 +146,7 @@ impl State {
 
         let mut table = Table::new().add_row(vec![
             " ",
-            "Tab",
+            &format!("{:<width$}", "Tab", width = tab_name_width),
             " ID",
             &format!("{:<width$}", "Pane Title", width = pane_title_width),
         ]);
